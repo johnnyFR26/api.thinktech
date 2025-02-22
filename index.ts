@@ -1,10 +1,14 @@
 import Fastify from "fastify";
 import { registerRoutes } from "./routes";
 import corsMiddleware from "./middlewares/cors.middlerare";
+import "./instrument.js"
+import * as Sentry from "@sentry/node"
 
 const server = Fastify();
 registerRoutes(server)
 corsMiddleware(server, {});
+
+Sentry.setupFastifyErrorHandler(server)
 
 server.get("/", async (request, reply) => {
   reply.send("Server running");
