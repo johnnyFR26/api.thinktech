@@ -1,0 +1,26 @@
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+    "name": "Johnny Fontes Rabelo",
+    "email": "johnny.rabelo.cf@gmail.com",
+    "password": "130508",
+    "cpf": "12345678901",
+    "phone": "12345678901"
+}
+
+###
+
+GET http://localhost:3000/users
+
+###
+
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+    "email": "johnny.rabelo.cf@gmail.com",
+    "password": "130508"
+}
+
+###
