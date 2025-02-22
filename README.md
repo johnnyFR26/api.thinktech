@@ -21,7 +21,7 @@ A robust financial management and expense control API built with **Fastify**, **
 - **Zod**
 - **JWT (JsonWebToken)**
 - **Bcrypt**
-- **SQLite/PostgreSQL**
+- **PostgreSQL**
 
 ---
 
@@ -31,7 +31,7 @@ financial-management-api/
 ├─ controllers/    # Business logic
 ├─ lib/            # External library configurations (e.g., Prisma client)
 ├─ middlewares/    # Authentication and validation middleware
-├─ models/         # Prisma schema models
+├─ models/         # Interfaces of TS
 ├─ routes/         # API endpoints
 ├─ tests/          # Unit and integration tests
 └─ index.ts        # Application entry point
@@ -42,8 +42,8 @@ financial-management-api/
 ## 🔥 Getting Started
 ### 1. **Clone the repository:**
 ```sh
-git clone https://github.com/your-username/financial-management-api.git
-cd financial-management-api
+git clone https://github.com/johnnyFR26/api.thinktech.git
+cd api.thinktech
 ```
 
 ### 2. **Install dependencies:**
