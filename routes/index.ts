@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import UserRoutes from './user.routes';
 import AuthRoutes from './auth.routes';
+import AccountRoutes from './account.routes';
 
 /**
  * Registers all application routes with the provided Fastify server instance.
@@ -11,4 +12,5 @@ import AuthRoutes from './auth.routes';
 export const registerRoutes = async (server: FastifyInstance) => {
   await server.register(UserRoutes);
   await server.register(AuthRoutes);
+  await server.register(AccountRoutes)
 };

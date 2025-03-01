@@ -60,6 +60,19 @@ describe("API WORKFLOW", () => {
         })
         assert.strictEqual(response.statusCode, 200, "server does not return 200");
       });
+
+      it('Create account to user', async () => {
+        const response = await server.inject({
+            method: "POST",
+            url: "/accounts/johnny-teste@example.com",
+            body: {
+                currentValue: 1000.67,
+                currency: "BR",
+            }
+        })
+        assert.strictEqual(response.statusCode, 201, "server does not return 201");
+      });
+      
       
 
   it("Delete user", async () => {

@@ -24,7 +24,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  account   Account? @relation(fields: [accountId], references: [id])
+  account   Account? @relation(fields: [accountId], references: [id], onDelete: Cascade)
   accountId String?   @unique
 }
 
@@ -51,6 +51,16 @@ model Transaction {
 
   accountId String
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+}
+
+model Category{
+  id String @id @default(uuid())
+  name String
+
+  transactions Transaction[]
 }
 
 enum TransactionType {
