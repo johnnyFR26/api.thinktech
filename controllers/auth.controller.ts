@@ -38,19 +38,19 @@ export class AuthController {
     async login(request: FastifyRequest, reply: FastifyReply) {
         const validation = loginUserSchema.safeParse(request.body)
         if(!validation.success) {
-            return reply.status(401).send(validation.error.format())
+            return reply.status(401).send({error: validation.error.format()})
         }
         const data = validation.data
 
         const user = await db.user.findUnique({where: {email: data.email}})
 
         if(!user) {
-            return reply.status(404).send('User not found')
+            return reply.status(404).send({error: 'User not found'})
         }
 
         const isValidPassword = await bcrypt.compare(data.password, user.password)
         if(!isValidPassword) {
-            return reply.status(401).send('Invalid password')
+            return reply.status(401).send({error: 'Invalid password'})
         }else{
               const token = await jwt.sign({email: user.email}, 'secret', {expiresIn: '1d'})
             
