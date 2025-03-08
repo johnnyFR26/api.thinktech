@@ -42,7 +42,10 @@ export class AuthController {
         }
         const data = validation.data
 
-        const user = await db.user.findUnique({where: {email: data.email}})
+        const user = await db.user.findUnique({
+            where: {email: data.email},
+            include: {account: true}
+        })
 
         if(!user) {
             return reply.status(404).send({error: 'User not found'})
