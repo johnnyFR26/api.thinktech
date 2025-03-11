@@ -20,4 +20,5 @@ export default async function UserRoutes(server: FastifyInstance){
     server.delete('/users/:email', controller.deletebyEmail)
     server.get('/users', controller.getAll)
     server.put('/users/:email', controller.update)
+    server.get('/users/:email', controller.getOne)
 }
