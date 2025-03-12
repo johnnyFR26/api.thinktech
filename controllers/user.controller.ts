@@ -3,6 +3,7 @@ import { User } from "../models/user.model";
 import { z } from "zod";
 import { db } from "../lib/db";
 import bcrypt from "bcrypt"
+import { redisClient } from "../lib/redis";
 
 const createUserSchema = z.object({
     name: z.string().min(3, 'Name must be at least 3 characters'),
@@ -45,7 +46,18 @@ export class UserController {
      * @returns {Promise<void>}
      */
     async getAll(request: FastifyRequest, reply: FastifyReply) {
+        const cacheKey = 'all_users'
+
+        const cachedUsers = await redisClient.get(cacheKey)
+        if (cachedUsers) {
+            console.log('⚡ Returning cached users');
+            return reply.status(200).send(JSON.parse(cachedUsers));
+          }
+          
         const users = await db.user.findMany()
+
+        await redisClient.setEx(cacheKey, 60 * 5, JSON.stringify(users))
+
         return reply.status(200).send(users)
     }
 
