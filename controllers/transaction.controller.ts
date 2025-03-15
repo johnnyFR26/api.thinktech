@@ -51,4 +51,24 @@ export class TransactionController{
         return reply.status(201).send(transaction)
     }
 
+
+    /**
+     * Retrieves all transactions.
+     * 
+     * @function
+     * @memberof module:controllers.TransactionController
+     * @param request - The incoming request.
+     * @param reply - The reply to be sent back to the client.
+     * 
+     * @example
+     * curl -X GET 'http://localhost:3000/transactions'
+     * 
+     * @throws {Error} If an error occurs while retrieving transactions.
+     * @returns {Promise<void>}
+     */
+    async getAll(request: FastifyRequest, reply: FastifyReply){
+        const transactions = await db.transaction.findMany()
+        return reply.status(200).send(transactions)
+    }
+
 }

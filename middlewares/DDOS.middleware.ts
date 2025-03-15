@@ -8,7 +8,7 @@ export async function rateLimit(request: FastifyRequest, reply: FastifyReply) {
     const requests = await redisClient.incr(limitKey);
   
     if (requests === 1) {
-      await redisClient.expire(limitKey, 60); // Expira em 60 segundos
+      await redisClient.expire(limitKey, 60)
     }
   
     if (requests > 10) {
