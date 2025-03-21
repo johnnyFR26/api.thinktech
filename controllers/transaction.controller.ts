@@ -48,7 +48,19 @@ export class TransactionController{
         }
         const data = validation.data
         const transaction = await db.transaction.create({data})
-        return reply.status(201).send(transaction)
+        if(!transaction){
+            return reply.status(500).send('Error creating transaction')
+        }
+        const accountUpdate = await db.account.update({
+            where: {id: data.accountId},
+            data: {
+                currentValue: {
+                    increment: data.value
+                }
+            }
+        })
+        return reply.status(201).send({transaction, accountUpdate})
+
     }
 
 

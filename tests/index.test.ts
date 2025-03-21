@@ -3,7 +3,8 @@ import assert from "node:assert";
 import { server } from "../index";
 
 describe("API WORKFLOW", () => {
-  let _server: any;
+  let _server: any
+  let _account: any
 
   before(async () => {
     _server = await server.listen({ port: 3000 });
@@ -70,8 +71,24 @@ describe("API WORKFLOW", () => {
                 currency: "BR",
             }
         })
+        _account = JSON.parse(response.body)
         assert.strictEqual(response.statusCode, 201, "server does not return 201");
       });
+
+      it('make a transaction', async() => {
+        const response = await server.inject({
+            method: "POST",
+            url: "/transactions",
+            body: {
+                type: "input",
+                destination: "johnny-teste@example.com",
+                value: 1000.67,
+                description: "Test transaction",
+                accountId: _account.id
+            }
+        })
+        assert.strictEqual(response.statusCode, 201, "server does not return 201");
+      })
       
       
 

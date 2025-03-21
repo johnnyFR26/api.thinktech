@@ -30,5 +30,18 @@ Content-Type: application/json
 
 {
     "currentValue": 1000,
-    "currency": "BR"
+    "currency": "BRL"
 }
+
+###
+
+POST http://localhost:3000/transactions
+Content-Type: application/json
+
+{
+    "value": 100,
+    "type": "input",
+    "destination": "Teste",
+    "description": "Teste",
+    "accountId": 
+{

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -24,21 +18,23 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  account   Account? @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  accountId String?   @unique
+  account   Account? // Apenas referência, sem @relation aqui
 }
 
 model Account {
   id           String   @id @default(uuid())
   currentValue Decimal
-  currency     Currency @default(BR)
+  currency     Currency @default(BRL)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  transations Transaction[]
-  user        User?         @relation
+  transactions Transaction[] @relation// Corrigido o nome e adicionado Cascade
+  user         User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  userId       Int? @unique  // Criado para referenciar corretamente o User
 }
+
 
 model Transaction {
   id          String          @id @default(uuid())
@@ -52,15 +48,12 @@ model Transaction {
   accountId String
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
 }
 
-model Category{
-  id String @id @default(uuid())
-  name String
-
-  transactions Transaction[]
+model Category {
+  id          String @id @default(uuid())
+  name        String
 }
 
 enum TransactionType {
@@ -69,6 +62,6 @@ enum TransactionType {
 }
 
 enum Currency {
-  BR
+  BRL
   USS
 }
