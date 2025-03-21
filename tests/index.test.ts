@@ -68,7 +68,7 @@ describe("API WORKFLOW", () => {
             url: "/accounts/johnny-teste@example.com",
             body: {
                 currentValue: 1000.67,
-                currency: "BR",
+                currency: "BRL",
             }
         })
         _account = JSON.parse(response.body)
