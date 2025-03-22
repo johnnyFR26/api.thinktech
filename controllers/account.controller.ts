@@ -40,6 +40,7 @@ export class AccountController {
      * @returns {Promise<void>}
      */
     async getAll(request: FastifyRequest, reply: FastifyReply) {
+        request.log.info('Retrieving all accounts')
         const accounts = await db.account.findMany()
 
         if(!accounts){
