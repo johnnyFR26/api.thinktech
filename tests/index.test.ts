@@ -75,7 +75,7 @@ describe("API WORKFLOW", () => {
         assert.strictEqual(response.statusCode, 201, "server does not return 201");
       });
 
-      it('make a transaction', async() => {
+      it('make a transaction +', async() => {
         const response = await server.inject({
             method: "POST",
             url: "/transactions",
@@ -83,6 +83,21 @@ describe("API WORKFLOW", () => {
                 type: "input",
                 destination: "johnny-teste@example.com",
                 value: 1000.67,
+                description: "Test transaction",
+                accountId: _account.id
+            }
+        })
+        assert.strictEqual(response.statusCode, 201, "server does not return 201");
+      })
+
+      it('make a transaction -', async() => {
+        const response = await server.inject({
+            method: "POST",
+            url: "/transactions",
+            body: {
+                type: "output",
+                destination: "johnny-teste@example.com",
+                value: 120.67,
                 description: "Test transaction",
                 accountId: _account.id
             }
