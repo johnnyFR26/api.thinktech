@@ -51,16 +51,28 @@ export class TransactionController{
         if(!transaction){
             return reply.status(500).send('Error creating transaction')
         }
-        const accountUpdate = await db.account.update({
-            where: {id: data.accountId},
-            data: {
-                currentValue: {
-                    increment: data.value
-                }
-            }
-        })
-        return reply.status(201).send({transaction, accountUpdate})
+        if(data.type == TransactionType.output){
+          const accountUpdate = await db.account.update({
+              where: {id: data.accountId},
+              data: {
+                  currentValue: {
+                      decrement: data.value
+                  }
+              }
+          })
+          return reply.status(201).send({transaction, accountUpdate})
 
+        }else{
+            const accountUpdate = await db.account.update({
+                where: {id: data.accountId},
+                data: {
+                    currentValue: {
+                        increment: data.value
+                    }
+                }
+            })
+            return reply.status(201).send({transaction, accountUpdate})
+        }
     }
 
 
@@ -80,6 +92,12 @@ export class TransactionController{
      */
     async getAll(request: FastifyRequest, reply: FastifyReply){
         const transactions = await db.transaction.findMany()
+        return reply.status(200).send(transactions)
+    }
+
+    async getAllByAccountId(request: FastifyRequest<{Params: {accountId: string}}>, reply: FastifyReply){
+        const accountId = request.params.accountId
+        const transactions = await db.transaction.findMany({where: {accountId}})
         return reply.status(200).send(transactions)
     }
 

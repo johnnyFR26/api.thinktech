@@ -5,4 +5,5 @@ const controller = new TransactionController()
 
 export default async function TransactionRoutes(server: FastifyInstance) {
     server.post('/transactions', controller.create)
+    server.get('/transactions/:accountId', controller.getAllByAccountId)
 }
