@@ -55,7 +55,7 @@ export class AuthController {
         if(!isValidPassword) {
             return reply.status(401).send({error: 'Invalid password'})
         }else{
-              const token = await jwt.sign({email: user.email}, 'secret', {expiresIn: '1d'})
+              const token = await jwt.sign({email: user.email}, process.env.JWT_SECRET, {expiresIn: '1d'})
             
               return reply.status(200).send({token, user})
         }
