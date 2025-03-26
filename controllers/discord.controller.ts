@@ -46,6 +46,5 @@ export async function handleGitHubWebhook(
       return reply.status(500).send({ error: "Erro ao processar webhook" });
     }
   }
-
   reply.send({ success: true });
 }
