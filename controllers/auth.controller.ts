@@ -3,6 +3,7 @@ import  bcrypt  from 'bcrypt';
 import { FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { db } from "../lib/db";
+import { redisClient } from '../lib/redis';
 
 const loginUserSchema = z.object({
     email: z.string().email(),
@@ -56,6 +57,8 @@ export class AuthController {
             return reply.status(401).send({error: 'Invalid password'})
         }else{
               const token = await jwt.sign({email: user.email}, process.env.JWT_SECRET, {expiresIn: '1d'})
+              
+              await redisClient.setEx(user.email, 86400, token)
             
               return reply.status(200).send({token, user})
         }
