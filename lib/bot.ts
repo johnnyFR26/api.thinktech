@@ -12,4 +12,13 @@ client.once('ready', () => {
 
 client.login(process.env.DISCORD_TOKEN)
 
+client.on("disconnect", () => {
+    console.warn("⚠️ Bot desconectado! Tentando reconectar...");
+  });
+  
+  client.on("reconnecting", () => {
+    console.log("🔄 Reconectando ao Discord...");
+  });
+  
+
 export { client }
