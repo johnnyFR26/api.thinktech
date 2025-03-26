@@ -2,14 +2,13 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { client } from "../lib/bot";
 import { TextChannel, NewsChannel, Channel } from "discord.js";
 
-// Definição do tipo esperado do webhook do GitHub
 interface GitHubWebhookPayload {
-  action?: string;
+  action?: string
   pull_request?: {
     title: string;
-    html_url: string;
+    html_url: string
     user: {
-      login: string;
+      login: string
     };
   };
 }
@@ -26,13 +25,11 @@ export async function handleGitHubWebhook(
 
       if (!channelId) {
         console.error("⚠️ CHANNEL_ID não está definido no .env");
-        return reply.status(500).send({ error: "Configuração inválida" });
+        return reply.status(500).send({ error: "Configuração inválida" })
       }
 
-      // Busca o canal do Discord pelo ID
-      const channel: Channel | null = await client.channels.fetch(channelId);
+      const channel: Channel | null = await client.channels.fetch(channelId)
 
-      // Verifica se o canal é do tipo correto antes de chamar `.send()`
       if (channel && (channel instanceof TextChannel || channel instanceof NewsChannel)) {
         const pr = payload.pull_request;
         await channel.send(
