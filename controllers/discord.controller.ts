@@ -21,7 +21,7 @@ export async function handleGitHubWebhook(
 
   if (payload?.action === "opened" && payload.pull_request) {
     try {
-      const channelId = process.env.CHANNEL_ID;
+      const channelId = "1354221727823171624";
 
       if (!channelId) {
         console.error("⚠️ CHANNEL_ID não está definido no .env");
@@ -30,7 +30,7 @@ export async function handleGitHubWebhook(
 
       const channel: Channel | null = await client.channels.fetch(channelId)
 
-      if (channel && (channel instanceof TextChannel || channel instanceof NewsChannel)) {
+      if (channel instanceof TextChannel) {
         const pr = payload.pull_request;
         await channel.send(
           `🔔 Novo Pull Request aberto! **${pr.title}**\n🔗 ${pr.html_url}\n👤 Autor: ${pr.user.login}`
