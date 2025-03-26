@@ -39,12 +39,12 @@ export async function handleGitHubWebhook(
           `🔔 Novo Pull Request aberto! **${pr.title}**\n🔗 ${pr.html_url}\n👤 Autor: ${pr.user.login}`
         );
       } else {
-        console.error("⚠️ O canal do Discord não é um canal de texto ou não foi encontrado.");
+        console.error("⚠️ O canal do Discord não é um canal de texto ou não foi encontrado.")
       }
     } catch (error) {
       console.error("❌ Erro ao enviar mensagem para o Discord:", error);
-      return reply.status(500).send({ error: "Erro ao processar webhook" });
+      return reply.status(500).send({ error: "Erro ao processar webhook" })
     }
   }
-  reply.send({ success: true });
+  reply.send({ success: true })
 }
