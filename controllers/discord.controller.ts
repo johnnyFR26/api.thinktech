@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { client } from "../lib/bot";
+import { client, waitForClientReady } from "../lib/bot";
 import { TextChannel, NewsChannel, Channel } from "discord.js";
 
 interface GitHubWebhookPayload {
@@ -25,6 +25,8 @@ async function handleGitHubWebhook(
       if (!channelId) throw new Error("⚠️ CHANNEL_ID não definido no .env");
 
       console.log(`🔍 Buscando canal com ID: ${channelId}`);
+
+      await waitForClientReady()
 
       // Verifica se o bot está pronto antes de buscar o canal
       if (!client.isReady()) {
