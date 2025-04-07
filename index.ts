@@ -22,7 +22,7 @@ async function setupGraphQL() {
   const schema = await buildSchema({
     resolvers: [UsersResolver],
     validate: true,
-    emitSchemaFile: true,
+    emitSchemaFile: false,
   });
 
   server.register(mercurius, {
