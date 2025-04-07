@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "name": "api.thinktech",
   "version": "1.0.0",
   "description": "This api is used to control all the actions of the thinktech organization",
