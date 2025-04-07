@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "name": "api.thinktech",
   "version": "1.0.0",
   "description": "This api is used to control all the actions of the thinktech organization",
@@ -18,10 +19,15 @@
     "@prisma/client": "^6.0.1",
     "@sentry/cli": "^2.42.1",
     "bcrypt": "^5.1.1",
+    "class-validator": "^0.14.1",
     "discord.js": "^14.18.0",
     "fastify": "^5.1.0",
+    "graphql": "^16.10.0",
     "jsonwebtoken": "^9.0.2",
+    "mercurius": "^16.1.0",
     "redis": "^4.7.0",
+    "reflect-metadata": "^0.2.2",
+    "type-graphql": "^2.0.0-rc.2",
     "zod": "^3.24.1"
   },
   "devDependencies": {

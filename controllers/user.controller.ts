@@ -123,6 +123,7 @@ export class UserController {
         data.password = await bcrypt.hash(data.password, 10)
         
         try {
+            //@ts-expect-error
             const user = await db.user.create({data})
             return reply.status(201).send(user)
         } catch (error) {
