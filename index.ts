@@ -31,21 +31,25 @@ async function setupGraphQL() {
   });
 }
 
-await setupGraphQL();
-
 // 🧪 Rota simples REST
 server.get("/", async (request, reply) => {
   reply.send("Server running");
 });
 
 // 🚀 Inicializa o servidor
-server.listen({ port: 3000 }, (err, address) => {
-  if (err) {
-    console.error(err);
-    process.exit(1);
-  }
-  console.log(`Server listening at ${address}`);
-});
+async function bootstrap() {
+  await setupGraphQL();
+
+  server.listen({ port: 3000 }, (err, address) => {
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    }
+    console.log(`Server listening at ${address}`);
+  });
+}
+
+bootstrap();
 
 // 🔄 Export handler universal
 export default async (req: any, res: any) => {
