@@ -1,23 +1,18 @@
 import Fastify from "fastify";
 import mercurius from "mercurius";
-import "reflect-metadata"; // necessário pro type-graphql funcionar
+import "reflect-metadata";
 import { buildSchema } from "type-graphql";
 
 import { registerRoutes } from "./routes";
 import corsMiddleware from "./middlewares/cors.middlerare";
 import { UsersResolver } from "./graphql/resolvers/users-resolver";
 
-// 📦 Import resolvers GraphQL
-
 const server = Fastify();
 
-// 🔁 Middleware CORS
 corsMiddleware(server, {});
 
-// 📡 Rotas REST
 registerRoutes(server);
 
-// 📦 Inicialização do schema GraphQL
 async function setupGraphQL() {
   const schema = await buildSchema({
     resolvers: [UsersResolver],
@@ -27,16 +22,14 @@ async function setupGraphQL() {
 
   server.register(mercurius, {
     schema,
-    graphiql: true, // habilita playground
+    graphiql: true,
   });
 }
 
-// 🧪 Rota simples REST
 server.get("/", async (request, reply) => {
   reply.send("Server running");
 });
 
-// 🚀 Inicializa o servidor
 async function bootstrap() {
   await setupGraphQL();
 
@@ -51,7 +44,6 @@ async function bootstrap() {
 
 bootstrap();
 
-// 🔄 Export handler universal
 export default async (req: any, res: any) => {
   await server.ready();
   server.server.emit("request", req, res);
