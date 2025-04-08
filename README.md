@@ -1,111 +1,160 @@
 # 📈 Financial Management API
 
-A robust financial management and expense control API built with **Fastify**, **Prisma**, **Zod**, **JWT**, and **Bcrypt**. This API allows secure authentication, user management, and financial transaction tracking to support financial management applications.
+A robust financial management and expense control API built with **Fastify**, **Prisma**, **Zod**, **JWT**, **Redis**, and **GraphQL**. This hybrid API supports both **REST** and **GraphQL**, offering flexibility, performance, and developer productivity for modern financial apps.
 
 ---
 
 ## 🚀 Features
-- **User Authentication:** Secure login with **JWT**.
-- **Data Validation:** Strong validation using **Zod**.
-- **Password Security:** Hashing and verification with **Bcrypt**.
-- **Database ORM:** **Prisma** for robust and easy database management.
-- **Fast and Lightweight:** Built with **Fastify** for performance.
-- **Financial Management:** Manage income, expenses, and budget efficiently.
+
+- 🔐 **User Authentication:** Secure login with **JWT**
+- 🔍 **Input Validation:** Strong data validation using **Zod**
+- 🔑 **Password Security:** Hashed credentials with **Bcrypt**
+- 🚀 **High Performance API:** Built with **Fastify**
+- 📊 **Financial Management:** Track income, expenses, and budgeting
+- 🧠 **GraphQL Support:** Flexible data querying with **Mercurius + TypeGraphQL**
+- ⚡ **Redis Integration:** Caching, session control, or pub/sub events
+- 🤖 **Discord Bot Integration:** Notifications, commands, or budget alerts via Discord
 
 ---
 
-## 🛠️ Tech Stack
+## 💠 Tech Stack
+
 - **Node.js**
 - **Fastify**
-- **Prisma**
-- **Zod**
-- **JWT (JsonWebToken)**
-- **Bcrypt**
+- **Prisma** (ORM)
+- **Zod** (Validation)
+- **JWT** (Auth)
+- **Bcrypt** (Hashing)
 - **PostgreSQL**
+- **GraphQL** (TypeGraphQL + Mercurius)
+- **Redis** (via ioredis or node-redis)
+- **Discord.js** (Bot integration)
 
 ---
 
 ## 📂 Project Structure
+
 ```
 financial-management-api/
-├─ controllers/    # Business logic
-├─ lib/            # External library configurations (e.g., Prisma client)
-├─ middlewares/    # Authentication and validation middleware
-├─ models/         # Interfaces of TS
-├─ routes/         # API endpoints
-├─ tests/          # Unit and integration tests
-└─ index.ts        # Application entry point
+🔾 controllers/        # REST: Business logic
+🔾 graphql/
+   🔾 resolvers/       # GraphQL resolvers
+   🔾 dtos/            # Models and inputs (TypeGraphQL)
+🔾 lib/                # DB, Redis, Discord bot config
+🔾 middlewares/        # Auth, validation, error handlers
+🔾 models/             # TypeScript interfaces
+🔾 routes/             # REST endpoints
+🔾 tests/              # Unit and integration tests
+🔾 index.ts            # App entry point (REST + GraphQL boot)
 ```
 
 ---
 
 ## 🔥 Getting Started
-### 1. **Clone the repository:**
+
+### 1. **Clone the repository**
 ```sh
 git clone https://github.com/johnnyFR26/api.thinktech.git
 cd api.thinktech
 ```
 
-### 2. **Install dependencies:**
+### 2. **Install dependencies**
 ```sh
 npm install
 ```
 
-### 3. **Set up environment variables:**
-Create a `.env` file in the root directory with the following variables:
+### 3. **Set up environment variables**
+Create a `.env` file:
+
 ```env
-DATABASE_URL="file:./dev.db"  # For SQLite (or use a PostgreSQL connection string)
-JWT_SECRET="your_secret_key"
+DATABASE_URL="postgresql://user:pass@localhost:5432/yourdb"
+JWT_SECRET="your_jwt_secret"
+REDIS_URL="redis://localhost:6379"
+DISCORD_TOKEN="your_bot_token"
+DISCORD_CHANNEL_ID="your_channel_id"
 ```
 
-### 4. **Run Prisma migrations:**
+### 4. **Run Prisma migrations**
 ```sh
 npx prisma migrate dev --name init
 ```
 
-### 5. **Start the server:**
+### 5. **Start the server**
 ```sh
 npm run dev
 ```
-Access at: [http://localhost:3000](http://localhost:3000)
+
+Access:
+- REST: [http://localhost:3000](http://localhost:3000)
+- GraphQL Playground: [http://localhost:3000/graphiql](http://localhost:3000/graphiql)
 
 ---
 
-## 🚦 **API Endpoints**
-### Authentication
-- `POST /auth/login` - Authenticate a user and receive a JWT.
+## ⚙️ API Overview
 
-### User Management
-- `GET /users` - Get all users.
-- `POST /users` - Create a new user.
+### REST Endpoints
 
-### Financial Transactions
-- `GET /transactions` - Get all financial transactions.
-- `POST /transactions` - Create a new transaction.
-- `DELETE /transactions/:id` - Delete a transaction.
+#### Authentication
+- `POST /auth/login` – Authenticate and receive a JWT
+
+#### Users
+- `GET /users` – List all users
+- `POST /users` – Create a user
+- `DELETE /users/:id` – Delete a user
+
+#### Transactions
+- `GET /transactions` – List all transactions
+- `POST /transactions` – Create a transaction
+- `DELETE /transactions/:id` – Remove a transaction
+
+### GraphQL Endpoint
+- Accessible at `/graphiql`
+- Supports full CRUD via resolvers (User, Account, Transaction, etc.)
 
 ---
 
-## 🧪 **Running Tests**
+## 🤖 Discord Bot
+
+- Sends transaction alerts or budgeting summaries directly to a Discord channel.
+- Can support custom commands or notifications via webhook or `discord.js`.
+
+---
+
+## 🧠 Redis Usage
+
+- Used for:
+  - Caching frequently accessed queries
+  - Session/token management (future)
+  - Event pub/sub (e.g., Discord integration or webhooks)
+
+---
+
+## 🧪 Running Tests
 ```sh
 npm run test
 ```
 
 ---
 
-## 🔒 **Security Best Practices**
-- Store secrets in environment variables.
-- Hash passwords before saving to the database.
-- Validate all input with **Zod**.
-- Use HTTPS in production.
+## 🔐 Security Best Practices
+
+- Passwords hashed with Bcrypt
+- All input validated via Zod
+- Auth protected routes using JWT
+- Secrets stored in `.env`
+- HTTPS recommended in production
 
 ---
 
-## 📄 **License**
-This project is licensed under the MIT License.
+## 📄 License
+
+This project is licensed under the **MIT License**
 
 ---
 
-## 👨‍💻 **Contributing**
-Feel free to open issues or submit pull requests to help improve this project!
+## 👥 Contributing
+
+Found a bug or have an idea?  
+Pull requests and suggestions are welcome.  
+Let’s build something awesome together! 🚀
 

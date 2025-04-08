@@ -122,7 +122,5 @@ describe("API WORKFLOW", () => {
     });
     assert.strictEqual(response.statusCode, 200, "server does not return 200");
     assert.equal(Array.isArray(JSON.parse(response.body)), true, "response is not an array");
-  });
-  
-
+  });  
 });
