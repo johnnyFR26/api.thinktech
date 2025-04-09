@@ -50,15 +50,15 @@ export class TransactionController{
         const data = validation.data
         const transaction = await db.transaction.create({
             data: {
-              value: 100,
-              description: "Compra no mercado",
-              type: "output",
-              destination: "Supermercado XYZ",
+              value: data.value,
+              description: data.description,
+              type: data.type,
+              destination: data.destination,
               account: {
-                connect: { id: "account-id-aqui" }
+                connect: { id: data.accountId }
               },
               category: {
-                connect: { id: "category-id-aqui" }
+                connect: { id: data.categoryId }
               }
             }
           });        if(!transaction){
@@ -113,5 +113,9 @@ export class TransactionController{
         const transactions = await db.transaction.findMany({where: {accountId}})
         return reply.status(200).send(transactions)
     }
-    
+    async getAllByCategoryId(request: FastifyRequest<{Params: {categoryId: string}}>, reply: FastifyReply){
+        const categoryId = request.params.categoryId
+        const transactions = await db.transaction.findMany({where: {categoryId}})
+        return reply.status(200).send(transactions)
+    }
 }
