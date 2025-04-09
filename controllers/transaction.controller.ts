@@ -9,7 +9,8 @@ const createTransactionSchema = z.object({
     description: z.string(),
     type: z.nativeEnum(TransactionType),
     destination: z.string(),
-    accountId: z.string()
+    accountId: z.string(),
+    categoryId: z.string()
 })
 
 /**
@@ -47,8 +48,20 @@ export class TransactionController{
             })
         }
         const data = validation.data
-        const transaction = await db.transaction.create({data})
-        if(!transaction){
+        const transaction = await db.transaction.create({
+            data: {
+              value: 100,
+              description: "Compra no mercado",
+              type: "output",
+              destination: "Supermercado XYZ",
+              account: {
+                connect: { id: "account-id-aqui" }
+              },
+              category: {
+                connect: { id: "category-id-aqui" }
+              }
+            }
+          });        if(!transaction){
             return reply.status(500).send('Error creating transaction')
         }
         if(data.type == TransactionType.output){
@@ -100,5 +113,5 @@ export class TransactionController{
         const transactions = await db.transaction.findMany({where: {accountId}})
         return reply.status(200).send(transactions)
     }
-
+    
 }
