@@ -48,12 +48,15 @@ model Transaction {
   accountId String
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
+  categoryId String
+  category  Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
 }
 
 model Category {
   id          String @id @default(uuid())
   name        String
+  transactions Transaction[] @relation
 }
 
 enum TransactionType {
