@@ -22,8 +22,13 @@ export class UsersResolver {
             include: {
               account: {
                 include: {
-                  transactions: true
+                    categories: {
+                        include: {
+                            transactions: true
+                        }
+                    }
                 }
+
               }
             }
           })
