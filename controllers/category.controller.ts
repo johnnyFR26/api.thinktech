@@ -4,7 +4,8 @@ import { z } from "zod";
 import { db } from "../lib/db";
 
 const createCategorySchema = z.object({
-    name: z.string().max(50, "Your category name can't have more than 50 characters")
+    name: z.string().max(50, "Your category name can't have more than 50 characters"),
+    accountId: z.string().uuid("Invalid account id"),
 })
 
 const updateCategorySchema = createCategorySchema.partial()
@@ -24,7 +25,8 @@ export class CategoryController {
             try {
                 const category = await db.category.create({
                     data: {
-                        name: data.name
+                        name: data.name,
+                        accountId: data.accountId,
                     }
                 })
                 return reply.status(201).send(category)

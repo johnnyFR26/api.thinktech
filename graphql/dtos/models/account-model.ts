@@ -2,6 +2,7 @@ import { Field, Float, ID, ObjectType } from "type-graphql";
 import { User } from "./user-model";
 import { Currency } from "../enums";
 import { Transaction } from "./transaction-model";
+import { Category } from "./category-model";
 
 @ObjectType()
 export class Account {
@@ -22,6 +23,9 @@ export class Account {
 
     @Field(() => [Transaction])
     transactions: Transaction[];
+
+    @Field(() => [Category])
+    categories: Category[];
 
     @Field(() => User, { nullable: true })
     user?: User;

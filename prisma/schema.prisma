@@ -29,6 +29,7 @@ model Account {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  categories   Category[] @relation
   transactions Transaction[] @relation// Corrigido o nome e adicionado Cascade
   user         User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -56,6 +57,8 @@ model Transaction {
 model Category {
   id          String @id @default(uuid())
   name        String
+  accountId   String?
+  account     Account? @relation(fields: [accountId], references: [id], onDelete: Cascade)
   transactions Transaction[] @relation
 }
 
