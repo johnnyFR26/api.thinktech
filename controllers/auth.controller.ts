@@ -45,7 +45,13 @@ export class AuthController {
 
         const user = await db.user.findUnique({
             where: {email: data.email},
-            include: {account: true}
+            include: {
+                account: {
+                    include: {
+                        categories: true
+                    }
+                }
+            }
         })
 
         if(!user) {
