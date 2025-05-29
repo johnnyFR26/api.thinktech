@@ -56,13 +56,11 @@ export class UserController {
           
         const users = await db.user.findMany()
 
-        await redisClient.setEx(cacheKey, 30, JSON.stringify(users))
+        await redisClient.setEx(cacheKey, 50, JSON.stringify(users))
 
         return reply.status(200).send(users)
     }
-
-
-
+ 
 
     /**
      * Retrieves a user by email.

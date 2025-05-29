@@ -8,7 +8,9 @@
     "build": "npx prisma generate",
     "postinstall": "npx prisma generate",
     "dev": "tsx --test --watch index.ts",
-    "test": "tsx --watch --test tests/index.test.ts"
+    "test": "tsx --watch --test tests/index.test.ts",
+    "start:dev": "CLIMEM=8999 tsx -r climem index.ts",
+    "memory": "npx climem 8999"
   },
   "keywords": [],
   "author": "JohnnyFR26",
@@ -19,6 +21,7 @@
     "@sentry/cli": "^2.42.1",
     "bcrypt": "^5.1.1",
     "class-validator": "^0.14.1",
+    "climem": "^2.0.0",
     "discord.js": "^14.18.0",
     "fastify": "^5.1.0",
     "graphql": "^16.10.0",
