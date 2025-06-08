@@ -4,3 +4,9 @@ node_modules
 
 # Sentry Config File
 .sentryclirc
+
+dist
+
+*0x
+
+*.log

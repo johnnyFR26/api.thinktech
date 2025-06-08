@@ -110,12 +110,12 @@ export class TransactionController{
 
     async getAllByAccountId(request: FastifyRequest<{Params: {accountId: string}}>, reply: FastifyReply){
         const accountId = request.params.accountId
-        const transactions = await db.transaction.findMany({where: {accountId}})
+        const transactions = await db.transaction.findMany({where: {accountId}, include: {category: true}})
         return reply.status(200).send(transactions)
     }
     async getAllByCategoryId(request: FastifyRequest<{Params: {categoryId: string}}>, reply: FastifyReply){
         const categoryId = request.params.categoryId
-        const transactions = await db.transaction.findMany({where: {categoryId}})
+        const transactions = await db.transaction.findMany({where: {categoryId}, include: {category: true}})
         return reply.status(200).send(transactions)
     }
 }

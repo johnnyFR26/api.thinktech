@@ -83,6 +83,7 @@ describe("API WORKFLOW", () => {
           body:{
             name: "Receita federal",
             accountId: _account.id,
+            controls: "{}"
           }
         })
         _category = JSON.parse(response.body)

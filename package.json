@@ -5,12 +5,12 @@
   "main": "index.ts",
   "scripts": {
     "start": "tsx index.ts",
+    "build:dev": "tsup index.ts",
     "build": "npx prisma generate",
     "postinstall": "npx prisma generate",
     "dev": "tsx --test --watch index.ts",
     "test": "tsx --watch --test tests/index.test.ts",
-    "start:dev": "CLIMEM=8999 tsx -r climem index.ts",
-    "memory": "npx climem 8999"
+    "memory": "npx 0x -- node dist/index.js"
   },
   "keywords": [],
   "author": "JohnnyFR26",
@@ -33,7 +33,10 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "0x": "^5.8.0",
     "prisma": "^6.0.1",
-    "tsx": "^4.19.2"
+    "tsup": "^8.5.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3"
   }
 }
