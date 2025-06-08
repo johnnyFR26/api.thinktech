@@ -8,34 +8,38 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  name     String
-  email    String @unique
-  phone    String
-  password String
-  cpf      String
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  phone     String
+  password  String
+  cpf       String
+  controls  Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  account   Account? // Apenas referência, sem @relation aqui
+  account   Account?
 }
 
 model Account {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   currentValue Decimal
-  currency     Currency @default(BRL)
+  currency     Currency  @default(BRL)
+  controls     Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  categories   Category[] @relation
-  transactions Transaction[] @relation// Corrigido o nome e adicionado Cascade
-  user         User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int     @unique
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  userId       Int? @unique  // Criado para referenciar corretamente o User
+  transactions Transaction[]
+  categories   Category[]
+  objectives   Objective[]
+  plannings    Planning[]
+  creditCards  CreditCard[]
 }
-
 
 model Transaction {
   id          String          @id @default(uuid())
@@ -44,22 +48,98 @@ model Transaction {
   destination String
   description String
 
+  accountId   String
+  account     Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  categoryId   String
+  category     Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  creditCardId String?
+  creditCard   CreditCard? @relation(fields: [creditCardId], references: [id])
+
+  objectiveId String?
+  objective   Objective? @relation(fields: [objectiveId], references: [id])
+
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id        String       @id @default(uuid())
+  name      String
+  controls  Json?
 
   accountId String
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
-  categoryId String
-  category  Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
+  transactions Transaction[]
+  planningCategories PlanningCategories[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model Category {
-  id          String @id @default(uuid())
-  name        String
-  accountId   String?
-  account     Account? @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  transactions Transaction[] @relation
+model CreditCard {
+  id             String   @id @default(uuid())
+  availableLimit Decimal
+  limit          Decimal
+  company        String
+  expire         DateTime
+  close          DateTime
+  controls       Json?
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  transactions Transaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Objective {
+  id        String   @id @default(uuid())
+  title     String
+  limit     Decimal
+  milestone DateTime
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  transactions Transaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Planning {
+  id             String   @id @default(uuid())
+  availableLimit Decimal
+  limit          Decimal
+  month          DateTime
+  title          String
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  planningCategories PlanningCategories[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PlanningCategories {
+  id             String   @id @default(uuid())
+  availableLimit Decimal
+  limit          Decimal
+
+  categoryId String
+  planningId String
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  planning Planning @relation(fields: [planningId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 }
 
 enum TransactionType {
