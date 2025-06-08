@@ -3,6 +3,7 @@ import { Transaction } from "../models/transaction.model"
 import { db } from "../lib/db"
 import { z } from "zod"
 import { TransactionType } from "@prisma/client"
+import { endOfMonth, startOfMonth } from "date-fns"
 
 const createTransactionSchema = z.object({
     value: z.number(),
@@ -118,4 +119,48 @@ export class TransactionController{
         const transactions = await db.transaction.findMany({where: {categoryId}, include: {category: true}})
         return reply.status(200).send(transactions)
     }
+
+    /**
+     * Retrieves all transactions for a specific account within a given month.
+     * 
+     * @function
+     * @memberof module:controllers.TransactionController
+     * @param request - The incoming request containing the month and accountId in the request body.
+     * @param reply - The reply to be sent back to the client.
+     * 
+     * @example
+     * curl -X POST 'http://localhost:3000/transactions/by-month' 
+     * -H 'Content-Type: application/json' 
+     * -d '{ "month": 5, "accountId": "some-account-id" }'
+     * 
+     * @throws {Error} If an error occurs while retrieving transactions.
+     * @returns {Promise<void>}
+     */
+    async getAllByMonth(
+    request: FastifyRequest<{ Body: { 
+        month: number,
+        accountId: string
+    } }>,
+    reply: FastifyReply
+    ) {
+    const month = request.body.month;
+    const now = new Date();
+    const year = now.getFullYear();
+
+    const startDate = startOfMonth(new Date(year, month - 1));
+    const endDate = endOfMonth(new Date(year, month - 1));
+
+    const transactions = await db.transaction.findMany({
+        where: {
+        accountId: request.body.accountId,
+        createdAt: {
+            gte: startDate,
+            lte: endDate,
+        },
+        },
+    });
+
+    return reply.status(200).send(transactions);
+    }
+
 }
