@@ -163,4 +163,71 @@ export class TransactionController{
     return reply.status(200).send(transactions);
     }
 
+    /**
+     * Updates a transaction by ID.
+     * 
+     * @function
+     * @memberof module:controllers.TransactionController
+     * @param request - The incoming request containing the transaction ID in the path and the updated transaction in the request body.
+     * @param reply - The reply to be sent back to the client.
+     * 
+     * @example
+     * curl -X PATCH 'http://localhost:3000/transactions/{id}' 
+     * -H 'Content-Type: application/json' 
+     * -d '{ "value": 100.99, "description": "Updated transaction", "type": "input", "destination": "johnny-teste@example.com", "accountId": "some-account-id", "categoryId": "some-category-id" }'
+     * 
+     * @throws {Error} If an error occurs while updating the transaction.
+     * @returns {Promise<void>}
+     */
+    async patch(request: FastifyRequest<{Params: {id: string}, Body: Transaction}>, reply: FastifyReply){
+        const validation = createTransactionSchema.safeParse(request.body)
+        if(!validation.success){
+            return reply.status(400).send({
+                error: validation.error.format()
+            })
+        }
+        const data = validation.data
+        const transaction = await db.transaction.update({
+            where: {id: request.params.id},
+            data: {
+                value: data.value,
+                description: data.description,
+                type: data.type,
+                destination: data.destination,
+                account: {
+                    connect: { id: data.accountId }
+                },
+                category: {
+                    connect: { id: data.categoryId }
+                }
+            }
+        })
+        if(!transaction){
+            return reply.status(500).send('Error updating transaction')
+        }
+        return reply.status(204).send(transaction)
+    }
+
+    /**
+     * Deletes a transaction by ID.
+     * 
+     * @function
+     * @memberof module:controllers.TransactionController
+     * @param request - The incoming request containing the ID of the transaction to be deleted.
+     * @param reply - The reply to be sent back to the client.
+     * 
+     * @example
+     * curl -X DELETE 'http://localhost:3000/transactions/{id}'
+     * 
+     * @throws {Error} If an error occurs while deleting the transaction.
+     * @returns {Promise<void>}
+     */
+    async delete(request: FastifyRequest<{Params: {id: string}}>, reply: FastifyReply){
+        const transaction = await db.transaction.delete({where: {id: request.params.id}})
+        if(!transaction){
+            return reply.status(500).send('Error deleting transaction')
+        }
+        return reply.status(204).send(transaction)
+    }
+
 }
