@@ -1,44 +1,41 @@
+// src/middlewares/auth.ts
 import { FastifyRequest, FastifyReply } from 'fastify';
 import jwt from 'jsonwebtoken';
-import { RedisClientType } from 'redis'; // Dependendo da versão que você utiliza
 import { redisClient } from '../lib/redis';
 
-// Supondo que você já tenha configurado o cliente Redis em outro lugar do seu projeto
- /* importe ou configure o cliente Redis aqui */;
+type JwtPayload = { email: string; sub?: string; jti?: string };
 
-export async function authMiddleware(
-  request: FastifyRequest,
-  reply: FastifyReply,
-  next: () => void
-) {
+export async function authPreHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const authHeader = request.headers.authorization;
-
-    if (!authHeader) {
+    const authHeader = (request.headers.authorization ?? '') as string;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return reply.status(401).send({ error: 'Token não fornecido' });
     }
 
     const token = authHeader.split(' ')[1];
-    const secretKey = process.env.JWT_SECRET; // Certifique-se de armazenar sua chave secreta em variáveis de ambiente
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      request.log.error('JWT_SECRET não definido');
+      return reply.status(500).send({ error: 'Server misconfiguration' });
+    }
 
-    // Verifica o token JWT
-    const decoded = jwt.verify(token, secretKey) as { email: string }; // Certifique-se de que o JWT contém o email
+    const decoded = jwt.verify(token, secret, { algorithms: ['HS256'] }) as JwtPayload;
+
     const userEmail = decoded.email;
-
     if (!userEmail) {
-      return reply.status(403).send({ error: 'Token inválido: email não encontrado' });
+      return reply.status(403).send({ error: 'Token inválido: email ausente' });
     }
 
-    // Verifica o token no Redis
-    const cachedToken = await redisClient.get(userEmail);
-    if (cachedToken !== token) {
-      return reply.status(403).send({ error: 'Token inválido ou não autorizado' });
+    const cached = await redisClient.get(`auth:token:${userEmail}`);
+    if (!cached || cached !== token) {
+      return reply.status(403).send({ error: 'Token inválido ou revogado' });
     }
 
-    // Adiciona o payload decodificado ao request para uso posterior
-    //request.user = decoded;
-    next();
-  } catch (error) {
-    return reply.status(403).send({ error: 'Erro na autenticação: token inválido ou expirado' });
+    (request as any).user = decoded;
+
+    return;
+  } catch (err) {
+    request.log.warn({ err }, 'Falha na autenticação');
+    return reply.status(401).send({ error: 'Token inválido ou expirado' });
   }
 }
