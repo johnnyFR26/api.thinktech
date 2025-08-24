@@ -42,4 +42,14 @@ export class CategoryController {
         const categories = await db.category.findMany()
         reply.status(200).send(categories)
     }
+
+        async getAllByAccountId(request: FastifyRequest<{Params: {accountId: string}}>, reply: FastifyReply) {
+            const accountId = request.params.accountId
+            const categories = await db.category.findMany(
+                {
+                    where: {accountId},
+                    include: {transactions: true}
+                })
+            return reply.status(200).send(categories)
+        }
 }

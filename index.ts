@@ -7,7 +7,7 @@ import { registerRoutes } from "./routes";
 import corsMiddleware from "./middlewares/cors.middlerare";
 import { UsersResolver } from "./graphql/resolvers/users-resolver";
 
-const server = Fastify();
+const server = Fastify({ logger: true });
 
 corsMiddleware(server, {});
 
