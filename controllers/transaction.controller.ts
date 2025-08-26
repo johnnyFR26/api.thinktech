@@ -12,7 +12,7 @@ const createTransactionSchema = z.object({
     destination: z.string().min(1),
     accountId: z.string().uuid(),
     categoryId: z.string().uuid(),
-    invoiceId: z.string().uuid(),
+    invoiceId: z.string().uuid().optional(),
     creditCardId: z.string().uuid().optional(),
     objectiveId: z.string().uuid().optional()
 })
