@@ -11,7 +11,7 @@ Content-Type: application/json
 
 ###
 
-GET http://localhost:3000/users
+GET http://localhost:3000/category
 
 ###
 
@@ -39,12 +39,16 @@ POST http://localhost:3000/transactions
 Content-Type: application/json
 
 {
-    "value": 100,
+    "value": 1000,
     "type": "input",
     "destination": "Teste",
     "description": "Teste",
-    "accountId": 
-{
+    "accountId": "45931c4e-dd12-452d-947a-70e17ab9adf5",
+    "invoiceId": "d2e81b8d-9c18-4054-b0d3-7b93186283ae",
+    "categoryId": "1361a555-c366-4b04-90a8-110dc33b966e"
+
+    
+}
 
 ### Buscar transações por mês e conta
 POST http://localhost:3000/transactions/by-month

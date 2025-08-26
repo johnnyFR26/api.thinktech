@@ -1,3 +1,4 @@
+import { CreditCard } from './../models/creditcard.model';
 import { FastifyInstance } from 'fastify';
 import UserRoutes from './user.routes';
 import AuthRoutes from './auth.routes';
@@ -5,6 +6,8 @@ import AccountRoutes from './account.routes';
 import TransactionRoutes from './transaction.routes';
 import BotRoutes from './bot.routes';
 import CategoryRoutes from './category.routes';
+import CreditCardRoutes from './creditcard.routes';
+import InvoiceRoutes from './invoice.routes';
 
 /**
  * Registers all application routes with the provided Fastify server instance.
@@ -19,4 +22,6 @@ export const registerRoutes = async (server: FastifyInstance) => {
   await server.register(TransactionRoutes)
   await server.register(BotRoutes)
   await server.register(CategoryRoutes)
+  await server.register(InvoiceRoutes)
+  await server.register(CreditCardRoutes)
 };
