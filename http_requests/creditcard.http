@@ -1,0 +1,30 @@
+POST http://localhost:3000/creditcards
+Content-Type: application/json
+
+{
+    "accountId": "45931c4e-dd12-452d-947a-70e17ab9adf5",
+    "availableLimit": 10000.00,
+    "limit":         15000.00,
+    "company":        "CompanyTest",
+    "expire":         "2025-08-26",
+    "close":          "2025-08-27"
+}
+
+###
+
+GET http://localhost:3000/creditcards
+
+###
+
+POST http://localhost:3000/invoices
+Content-Type: application/json
+
+{
+  "dueDate":    "2025-08-26T00:00:00.000Z",
+  "closingDate": "2025-08-27T00:00:00.000Z",
+  "creditCardId": "bb2b7d83-7365-4905-83c0-c0d9f4b91f22"
+}
+
+###
+
+GET http://localhost:3000/invoices

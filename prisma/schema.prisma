@@ -60,6 +60,9 @@ model Transaction {
   objectiveId String?
   objective   Objective? @relation(fields: [objectiveId], references: [id])
 
+  invoiceId String?
+  invoice Invoice? @relation(fields: [invoiceId], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -91,6 +94,7 @@ model CreditCard {
   accountId String
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
+  invoices Invoice[] // Remove invoiceId, mantém apenas o array
   transactions Transaction[]
 
   createdAt DateTime @default(now())
@@ -142,6 +146,20 @@ model PlanningCategories {
   createdAt DateTime @default(now())
 }
 
+model Invoice {
+  id          String   @id @default(uuid())
+  dueDate     DateTime
+  closingDate DateTime
+  
+  transactions Transaction[]
+
+  creditCardId String
+  creditCard CreditCard @relation(fields: [creditCardId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 enum TransactionType {
   input
   output
@@ -149,5 +167,5 @@ enum TransactionType {
 
 enum Currency {
   BRL
-  USS
+  USD  // Corrigido de USS para USD
 }
