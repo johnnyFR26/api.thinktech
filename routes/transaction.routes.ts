@@ -17,7 +17,7 @@ export default async function TransactionRoutes(server: FastifyInstance) {
     server.get('/transactions/category/:categoryId', controller.getAllByCategoryId)
     
     // Get transactions by month
-    server.post('/transactions/by-month', controller.getAllByMonth)
+    server.post('/transactions/by-yearmonth', controller.getAllByYearMonth)
     
     // Get transaction statistics for an account
     server.get('/transactions/statistics/:accountId', controller.getStatistics)

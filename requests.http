@@ -11,7 +11,7 @@ Content-Type: application/json
 
 ###
 
-GET http://localhost:3000/category
+GET http://localhost:3000/accounts
 
 ###
 
@@ -51,10 +51,11 @@ Content-Type: application/json
 }
 
 ### Buscar transações por mês e conta
-POST http://localhost:3000/transactions/by-month
+POST http://localhost:3000/transactions/by-yearmonth
 Content-Type: application/json
 
 {
-  "month": 5,
-  "accountId": "e1e05cb7-dfe5-420f-b310-1bb9d835225d"
+  "year": 2024,
+  "month": 8,
+  "accountId": "45931c4e-dd12-452d-947a-70e17ab9adf5"
 }

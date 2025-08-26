@@ -295,7 +295,7 @@ export class TransactionController {
     /**
      * Get transactions by month with enhanced filtering
      */
-    async getAllByMonth(request: FastifyRequest<{
+    async getAllByYearMonth(request: FastifyRequest<{
         Body: { 
             month: number
             year?: number
