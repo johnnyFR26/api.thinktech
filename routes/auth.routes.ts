@@ -15,4 +15,5 @@ const controller = new AuthController()
  */
 export default async function AuthRoutes(server: FastifyInstance) {
     server.post('/auth/login', controller.login)
+    server.post('/auth/google', controller.loginWithGoogle)
 }

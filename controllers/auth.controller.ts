@@ -64,10 +64,38 @@ export class AuthController {
         }else{
               const token = await jwt.sign({email: user.email}, process.env.JWT_SECRET, {expiresIn: '1d'})
               
-              await redisClient.setEx(user.email, 86400, token)
+              await redisClient.setEx(`${user.id}`, 86400, token)
             
               return reply.status(200).send({token, user})
         }
         
+    }
+
+    async loginWithGoogle(request: FastifyRequest<{Body: {email: string, accessToken: string}}>, reply: FastifyReply) {
+        const {email, accessToken } = request.body
+
+        if(!email || !accessToken) {
+            return reply.status(400).send({error: 'Missing email or access token'})
+        }
+
+        const user = await db.user.findUnique({
+            where: {email},
+            include: {
+                account: {
+                    include: {
+                        categories: true
+                    }
+                }
+            }
+        })
+
+        if(!user) {
+            return reply.status(404).send({error: 'User not found'})
+        }
+
+        const token = await jwt.sign({email: user.email}, process.env.JWT_SECRET, {expiresIn: '1d'})
+        await redisClient.setEx(`${user.id}`, 86400, token)
+
+        return reply.status(200).send({token, user})
     }
 }
