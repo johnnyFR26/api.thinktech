@@ -8,8 +8,8 @@ const createCreditCardSchema = z.object({
     name: z.string(),
     limit: z.number(),
     company: z.string(),
-    expire: z.string().transform((str) => new Date(str)),
-    close: z.string().transform((str) => new Date(str)),
+    expire: z.number(),
+    close: z.number(),
     accountId: z.string(),
     controls: z.any().optional()
 })

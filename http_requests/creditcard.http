@@ -7,8 +7,8 @@ Content-Type: application/json
     "availableLimit": 10000.00,
     "limit":         15000.00,
     "company":        "CompanyTest",
-    "expire":         "2025-08-26",
-    "close":          "2025-08-27"
+    "expire":         27,
+    "close":          25
 }
 
 ###
