@@ -1,4 +1,5 @@
 export interface CreditCard {
+    name: string;
     id: string;
     accountId: string;
     invoiceId: string;

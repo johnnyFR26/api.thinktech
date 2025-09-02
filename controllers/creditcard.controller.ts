@@ -5,6 +5,7 @@ import { z } from "zod"
 
 const createCreditCardSchema = z.object({
     availableLimit: z.number(),
+    name: z.string(),
     limit: z.number(),
     company: z.string(),
     expire: z.string().transform((str) => new Date(str)),
@@ -64,6 +65,7 @@ export class CreditCardController {
         
         const creditCard = await db.creditCard.create({
             data: {
+                name: data.name,
                 availableLimit: data.availableLimit,
                 limit: data.limit,
                 company: data.company,

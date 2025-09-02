@@ -2,6 +2,7 @@ POST http://localhost:3000/creditcards
 Content-Type: application/json
 
 {
+    "name": "nubank",
     "accountId": "45931c4e-dd12-452d-947a-70e17ab9adf5",
     "availableLimit": 10000.00,
     "limit":         15000.00,
@@ -28,3 +29,7 @@ Content-Type: application/json
 ###
 
 GET http://localhost:3000/invoices
+
+###
+
+DELETE https://api-thinktech.vercel.app/creditcards/bb2b7d83-7365-4905-83c0-c0d9f4b91f22

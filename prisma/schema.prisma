@@ -84,6 +84,7 @@ model Category {
 
 model CreditCard {
   id             String   @id @default(uuid())
+  name           String @default("")
   availableLimit Decimal
   limit          Decimal
   company        String
@@ -154,7 +155,7 @@ model Invoice {
   transactions Transaction[]
 
   creditCardId String
-  creditCard CreditCard @relation(fields: [creditCardId], references: [id])
+  creditCard CreditCard @relation(fields: [creditCardId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
