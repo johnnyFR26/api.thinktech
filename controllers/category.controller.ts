@@ -29,7 +29,8 @@ export class CategoryController {
                         name: data.name,
                         accountId: data.accountId,
                         controls: data.controls ? JSON.parse(data.controls) : null
-                    }
+                    },
+                    include: {transactions: true}
                 })
                 return reply.status(201).send(category)
             } catch (error) {
