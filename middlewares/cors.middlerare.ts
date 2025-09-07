@@ -3,15 +3,16 @@ import fastifyCors from '@fastify/cors';
 
 /**
  * Registers the CORS middleware with the Fastify server, allowing cross-origin
- * requests from any origin.
- *
- * @function
- * @param {FastifyServer} server - The Fastify server instance to register the
- *     middleware with.
+ * requests from specified origins.
  */
 const corsMiddleware: FastifyPluginAsync = async (server) => {
-  server.register(fastifyCors, {
-    origin: '*',
+  await server.register(fastifyCors, {
+    origin: [
+      /\.vercel\.app$/,
+      'http://localhost:3000',
+      'http://localhost:4200',
+    ],
+    credentials: false,
   });
 };
 
