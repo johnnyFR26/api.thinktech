@@ -8,6 +8,7 @@ import fastifyCors from '@fastify/cors';
 const corsMiddleware: FastifyPluginAsync = async (server) => {
   await server.register(fastifyCors, {
     origin: [
+      'https://*.vercel.app',
       /\.vercel\.app$/,
       'http://localhost:3000',
       'http://localhost:4200',
