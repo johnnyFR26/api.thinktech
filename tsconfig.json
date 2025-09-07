@@ -1,14 +1,12 @@
 {
-    "compilerOptions": {
-      "experimentalDecorators": true,
-      "emitDecoratorMetadata": true,
-      "target": "es2022",
-      "module": "CommonJS",
-      "esModuleInterop": true,
-      "moduleResolution": "node",
-      "noEmit": true,
-      "allowImportingTsExtensions": true
-
-    }
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "target": "es2022",
+    "module": "NodeNext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   }
-  
+}

@@ -9,7 +9,7 @@ import { UsersResolver } from "./graphql/resolvers/users-resolver";
 
 const server = Fastify({ logger: true });
 
-server.register(corsMiddleware);
+await server.register(corsMiddleware);
 registerRoutes(server);
 
 async function setupGraphQL() {
