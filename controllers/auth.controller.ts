@@ -7,7 +7,8 @@ import { redisClient } from '../lib/redis';
 
 const loginUserSchema = z.object({
     email: z.string().email(),
-    password: z.string()
+    password: z.string(),
+    controls: z.any().optional()
 })
 
 /**
@@ -48,7 +49,7 @@ export class AuthController {
             include: {
                 account: {
                     include: {
-                        categories: true
+                        categories: true,
                     }
                 }
             }
@@ -65,6 +66,23 @@ export class AuthController {
               const token = await jwt.sign({email: user.email}, process.env.JWT_SECRET, {expiresIn: '1d'})
               
               await redisClient.setEx(`${user.id}`, 86400, token)
+
+              if(data.controls) {
+                  const updatedControls = {
+                   ...(user.controls as Record<string, any> ?? {}),
+                       loginLogs: [
+                     ...((user.controls as any)?.loginLogs ?? []),
+                         data.controls
+                          ]
+                      };
+    
+             await db.user.update({
+                where: {id: user.id},
+                   data: {
+                       controls: updatedControls
+                 }
+            });
+           }
             
               return reply.status(200).send({token, user})
         }
