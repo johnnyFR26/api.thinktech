@@ -4,12 +4,11 @@ import mercurius from "mercurius";
 import { buildSchema } from "type-graphql";
 
 import { registerRoutes } from "./routes";
-import corsMiddleware from "./middlewares/cors.middlerare";
+import { corsMiddleware } from "./middlewares/cors.middlerare";
 import { UsersResolver } from "./graphql/resolvers/users-resolver";
 
 const server = Fastify({ logger: true });
 
-corsMiddleware(server, {});
 registerRoutes(server);
 
 async function setupGraphQL() {

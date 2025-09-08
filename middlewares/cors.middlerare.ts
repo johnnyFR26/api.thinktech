@@ -5,7 +5,7 @@ import fastifyCors from '@fastify/cors';
  * Registers the CORS middleware with the Fastify server, allowing cross-origin
  * requests from specified origins.
  */
-const corsMiddleware: FastifyPluginAsync = async (server) => {
+export const corsMiddleware: FastifyPluginAsync = async (server) => {
   await server.register(fastifyCors, {
     origin: [
       '*',
@@ -18,5 +18,3 @@ const corsMiddleware: FastifyPluginAsync = async (server) => {
     credentials: false,
   });
 };
-
-export default corsMiddleware;
