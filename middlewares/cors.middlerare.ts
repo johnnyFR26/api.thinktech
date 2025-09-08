@@ -8,6 +8,7 @@ import fastifyCors from '@fastify/cors';
 const corsMiddleware: FastifyPluginAsync = async (server) => {
   await server.register(fastifyCors, {
     origin: [
+      '*',
       'https://finanz-beta.vercel.app',
       'https://*.vercel.app',
       /\.vercel\.app$/,

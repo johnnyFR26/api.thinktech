@@ -95,7 +95,7 @@ model CreditCard {
   accountId String
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
-  invoices Invoice[] // Remove invoiceId, mantém apenas o array
+  invoices Invoice[]
   transactions Transaction[]
 
   createdAt DateTime @default(now())
@@ -151,6 +151,7 @@ model Invoice {
   id          String   @id @default(uuid())
   dueDate     DateTime
   closingDate DateTime
+  status Boolean @default(true)
   
   transactions Transaction[]
 
@@ -168,5 +169,5 @@ enum TransactionType {
 
 enum Currency {
   BRL
-  USD  // Corrigido de USS para USD
+  USD
 }
