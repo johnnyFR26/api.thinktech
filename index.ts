@@ -1,6 +1,6 @@
+import "reflect-metadata";
 import Fastify from "fastify";
 import mercurius from "mercurius";
-import "reflect-metadata";
 import { buildSchema } from "type-graphql";
 
 import { registerRoutes } from "./routes";
@@ -9,7 +9,7 @@ import { UsersResolver } from "./graphql/resolvers/users-resolver";
 
 const server = Fastify({ logger: true });
 
-await server.register(corsMiddleware);
+corsMiddleware(server, {});
 registerRoutes(server);
 
 async function setupGraphQL() {
