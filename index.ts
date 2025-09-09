@@ -4,9 +4,8 @@ import mercurius from "mercurius";
 import { buildSchema } from "type-graphql";
 
 import { registerRoutes } from "./routes";
-import { corsMiddleware } from "./middlewares/cors.middlerare";
 import { UsersResolver } from "./graphql/resolvers/users-resolver";
-
+import cors from "@fastify/cors"
 const server = Fastify({ logger: true });
 
 registerRoutes(server);
@@ -29,6 +28,16 @@ server.get("/", async (request, reply) => {
 });
 
 async function bootstrap() {
+  await server.register(cors, {
+    origin: [
+      'https://finanz-beta.vercel.app',
+      'https://*.vercel.app',
+      /\.vercel\.app$/,
+      'http://localhost:3000',
+      'http://localhost:4200',
+    ],
+    credentials: false
+  })
   await setupGraphQL();
 
   server.listen({ port: 3000 }, (err, address) => {
