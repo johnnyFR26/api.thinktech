@@ -72,15 +72,37 @@ export class TransactionController {
                 const creditCard = await db.creditCard.findFirst({
                     where: { 
                         id: data.creditCardId,
-                        accountId: data.accountId 
-                    }
+                        accountId: data.accountId
+                    },
+                    include: { invoices: true }
                 })
                 if (!creditCard) {
                     return reply.status(404).send({ error: "Cartão de crédito não encontrado ou não pertence à conta" })
                 }
+
+                if (creditCard.invoices.length <= 0) {
+                    const invoice = await db.invoice.create({
+                        data: {
+                            creditCardId: creditCard.id,
+                            closingDate: new Date(creditCard.close),
+                            dueDate: new Date(creditCard.close)
+                        }
+                    })
+                    data.invoiceId = invoice.id
+                }else{
+                    data.invoiceId = creditCard.invoices.reverse()[0].id
+                }
+
+                const updateCreditCard = await db.creditCard.update({
+                    where: { id: creditCard.id },
+                    data: {
+                        availableLimit: {
+                            decrement: data.value
+                        }
+                    }
+                })
             }
 
-            // Se objectiveId foi fornecido, verifica se existe e pertence à conta
             if (data.objectiveId) {
                 const objective = await db.objective.findFirst({
                     where: { 
@@ -107,14 +129,14 @@ export class TransactionController {
                 },
                 include: {
                     category: true,
-                    creditCard: true,
-                    objective: true
+                    creditCard: {
+                        include: { invoices: true }
+                    },
+                    objective: true,
                 }
             })
 
-            // Atualiza o saldo da conta apenas se não for transação de cartão de crédito
             let accountUpdate = null
-            if (!data.creditCardId) {
                 if (data.type === TransactionType.output) {
                     accountUpdate = await db.account.update({
                         where: { id: data.accountId },
@@ -134,7 +156,7 @@ export class TransactionController {
                         }
                     })
                 }
-            }
+            
 
             return reply.status(201).send({
                 transaction,
