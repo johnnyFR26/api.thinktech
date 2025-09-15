@@ -48,7 +48,6 @@ export class TransactionController {
         const data = validation.data
 
         try {
-            // Verifica se a conta existe
             const account = await db.account.findUnique({
                 where: { id: data.accountId }
             })
@@ -56,7 +55,6 @@ export class TransactionController {
                 return reply.status(404).send({ error: "Conta não encontrada" })
             }
 
-            // Verifica se a categoria existe e pertence à conta
             const category = await db.category.findFirst({
                 where: { 
                     id: data.categoryId,
@@ -67,7 +65,6 @@ export class TransactionController {
                 return reply.status(404).send({ error: "Categoria não encontrada ou não pertence à conta" })
             }
 
-            // Se creditCardId foi fornecido, verifica se existe e pertence à conta
             if (data.creditCardId) {
                 const creditCard = await db.creditCard.findFirst({
                     where: { 
@@ -93,7 +90,7 @@ export class TransactionController {
                     data.invoiceId = creditCard.invoices.reverse()[0].id
                 }
 
-                const updateCreditCard = await db.creditCard.update({
+                db.creditCard.update({
                     where: { id: creditCard.id },
                     data: {
                         availableLimit: {
