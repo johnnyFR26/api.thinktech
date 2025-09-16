@@ -30,6 +30,7 @@ server.get("/", async (request, reply) => {
 async function bootstrap() {
   await server.register(cors, {
     origin: [
+      'https://finanz.app.br',
       'https://finanz-beta.vercel.app',
       'https://*.vercel.app',
       /\.vercel\.app$/,
