@@ -1,0 +1,8 @@
+---
+tools: [getUserInfo]
+input:
+  schema:
+    email: string
+---
+
+Como eu posso melhorar a minha vida financeira? meu email é {{email}}?

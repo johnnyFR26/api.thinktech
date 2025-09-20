@@ -2,13 +2,22 @@ import "reflect-metadata";
 import Fastify from "fastify";
 import mercurius from "mercurius";
 import { buildSchema } from "type-graphql";
-
 import { registerRoutes } from "./routes";
 import { UsersResolver } from "./graphql/resolvers/users-resolver";
+import { gemini15Flash, googleAI } from '@genkit-ai/googleai';
+import { genkit } from 'genkit';
 import cors from "@fastify/cors"
+
 const server = Fastify({ logger: true });
 
 registerRoutes(server);
+
+
+export const ai = genkit({
+  plugins: [googleAI()],
+  model: gemini15Flash,
+});
+
 
 async function setupGraphQL() {
   const schema = await buildSchema({
