@@ -5,20 +5,18 @@ import { client } from "../lib/bot";
 export default async function BotRoutes(server: FastifyInstance) {
     server.post('/webhook', handleGitHubWebhook)
     server.get("/ping", async (request, reply) => {
-        // Função que retorna uma Promise que resolve quando o client estiver pronto
         const waitForClientReady = () => {
             return new Promise<void>((resolve, reject) => {
                 const interval = setInterval(() => {
                     if (client.isReady()) {
-                        clearInterval(interval);  // Para o intervalo quando o client estiver pronto
-                        resolve();  // Resolve a Promise quando o client estiver pronto
+                        clearInterval(interval);
+                        resolve();
                     }
-                }, 1000);  // Verifica a cada 1 segundo
+                }, 1000);
             });
         };
     
         try {
-            // Espera até que o client esteja pronto
             await waitForClientReady();
             
             return reply.send({ status: "Bot online!", uptime: process.uptime() });
