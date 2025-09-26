@@ -8,4 +8,5 @@ export default async function PlanningRoutes(server: FastifyInstance) {
     server.get('/planning/:id', controller.getOne)
     server.patch('/planning/:id', controller.patch)
     server.delete('/planning/:id', controller.delete)
+    server.get('/planning/account/:accountId', controller.getAllByAccountId)
 }
