@@ -49,7 +49,11 @@ export class AuthController {
             include: {
                 account: {
                     include: {
-                        categories: true,
+                        categories: {
+                            include: {
+                                transactions: true
+                            }
+                        }
                     }
                 }
             }
