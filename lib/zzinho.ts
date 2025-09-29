@@ -54,4 +54,4 @@ const userInfoFlow = ai.defineFlow('userInfoFlow', async (input) => {
   console.log(text);
 });
 
-userInfoFlow({ email: 'johnny.rabelo.cf@gmail.com' });
+//userInfoFlow({ email: 'johnny.rabelo.cf@gmail.com' });

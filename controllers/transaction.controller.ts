@@ -119,28 +119,28 @@ export class TransactionController {
             })
 
             if (planningCategory) {
-                await db.planning.update({
+                await db.planningCategories.update({
                     where: {
-                        id: planningCategory.planningId
-                    },
-                    data: {
-                        availableLimit: {
-                            decrement: data.value
+                         id: planningCategory.id
+                      },
+                     data: {
+                          availableLimit: {
+                             decrement: data.value
+                           }
                         }
-                    }
-                }).then(async () => {
-                    await db.planning.update({
-                        where: {
-                            id: planningCategory.planningId
-                        },
-                        data: {
-                            availableLimit: {
-                                decrement: data.value
-                            }
-                        }
-                    })
-                })
+                   })
+
+    await db.planning.update({
+        where: {
+            id: planningCategory.planningId
+        },
+        data: {
+            availableLimit: {
+                decrement: data.value
             }
+        }
+    })
+}
 
             const transaction = await db.transaction.create({
                 data: {
