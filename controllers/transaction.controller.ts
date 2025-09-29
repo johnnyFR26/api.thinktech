@@ -112,6 +112,36 @@ export class TransactionController {
                 }
             }
 
+            const planningCategory = await db.planningCategories.findFirst({
+                where: {
+                    categoryId: data.categoryId
+                }
+            })
+
+            if (planningCategory) {
+                await db.planning.update({
+                    where: {
+                        id: planningCategory.planningId
+                    },
+                    data: {
+                        availableLimit: {
+                            decrement: data.value
+                        }
+                    }
+                }).then(async () => {
+                    await db.planning.update({
+                        where: {
+                            id: planningCategory.planningId
+                        },
+                        data: {
+                            availableLimit: {
+                                decrement: data.value
+                            }
+                        }
+                    })
+                })
+            }
+
             const transaction = await db.transaction.create({
                 data: {
                     value: data.value,
