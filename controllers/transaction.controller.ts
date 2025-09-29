@@ -112,35 +112,46 @@ export class TransactionController {
                 }
             }
 
-            const planningCategory = await db.planningCategories.findFirst({
+            const planningCategories = await db.planningCategories.findMany({
+            where: {
+                categoryId: data.categoryId
+            },
+            select: {
+                id: true,
+                planningId: true
+            }
+        })
+
+        if (planningCategories.length > 0) {
+            const categoryIds = planningCategories.map(pc => pc.id)
+            const planningIds = [...new Set(planningCategories.map(pc => pc.planningId))]
+
+            await db.planningCategories.updateMany({
                 where: {
-                    categoryId: data.categoryId
+                    id: {
+                        in: categoryIds
+                    }
+                },
+                data: {
+                    availableLimit: {
+                        decrement: data.value
+                    }
                 }
             })
 
-            if (planningCategory) {
-                await db.planningCategories.update({
-                    where: {
-                         id: planningCategory.id
-                      },
-                     data: {
-                          availableLimit: {
-                             decrement: data.value
-                           }
-                        }
-                   })
-
-    await db.planning.update({
-        where: {
-            id: planningCategory.planningId
-        },
-        data: {
-            availableLimit: {
-                decrement: data.value
-            }
+            await db.planning.updateMany({
+                where: {
+                    id: {
+                        in: planningIds
+                    }
+                },
+                data: {
+                    availableLimit: {
+                        decrement: data.value
+                    }
+                }
+            })
         }
-    })
-}
 
             const transaction = await db.transaction.create({
                 data: {
