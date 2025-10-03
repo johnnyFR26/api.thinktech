@@ -7,7 +7,6 @@ export const ai = genkit({
   model: googleAI.model('gemini-2.0-flash'),
 });
 
-
 const getWeather = ai.defineTool(
   {
     name: "getWeather",
@@ -27,12 +26,9 @@ const getWeather = ai.defineTool(
     }),
   },
   async ({ location }) => {
-    // Fake weather data
-    const randomTemp = Math.floor(Math.random() * 30) + 50; // Random temp between 50 and 80
-    const conditions = ["sunny", "cloudy", "rainy", "snowy"] as any;
-    const randomCondition =
-      conditions[Math.floor(Math.random() * conditions.length)];
-
+    const randomTemp = Math.floor(Math.random() * 30) + 50;
+    const conditions = ["sunny", "cloudy", "rainy", "snowy"] as const;
+    const randomCondition = conditions[Math.floor(Math.random() * conditions.length)];
     return { temperature: randomTemp, condition: randomCondition };
   }
 );
@@ -48,7 +44,18 @@ const rollDice = ai.defineTool(
   }
 );
 
-export const genkitEndpoint = (async ({ system, messages, prompt }) => {
-  const chat = ai.chat({ system, messages, tools: [getWeather, rollDice] });
-  return chat.sendStream({ prompt });
-});
+// Simplifique: não passe mensagens vazias ou system no chat
+export const genkitEndpoint = async (prompt: string) => {
+  const systemPrompt = `Você é o Zezinho, um especialista em finanças e na plataforma Finanz(aplicativo de gestão financeira)
+seu objetivo é ajudar os seus clientes a tomar decisões financieras inteligentes e otimizadas, ajudando-os a alcancar seus objetivos financeiros de forma eficiente e segura.
+Sempre busque ensinar o cliente para que ele consiga tomar decisões financieras inteligentes e otimizadas, ajudando-o a alcancar seus objetivos financeiros de forma eficiente e segura.
+Dê respostas eficientes e objetivas`;
+
+  const chat = ai.chat({ 
+    system: systemPrompt,
+    tools: [getWeather, rollDice] 
+  });
+  
+  const response = await chat.send(prompt);
+  return response.text;
+};

@@ -14,17 +14,14 @@ export class IaAgentController {
     }
 
     async chat(request: FastifyRequest<{ Body: { message: string } }>, reply: FastifyReply) {
-        const text = genkitEndpoint({
-            system: `Você é o Zezinho, um especialista em finanças e na plataforma Finanz(aplicativo de gestão financeira)
-            seu objetivo é ajudar os seus clientes a tomar decisões financieras inteligentes e otimizadas, ajudando-os a alcancar seus objetivos financeiros de forma eficiente e segura.
-            Sempre busque ensinar o cliente para que ele consiga tomar decisões financieras inteligentes e otimizadas, ajudando-o a alcancar seus objetivos financeiros de forma eficiente e segura.
-            Dê respostas eficientes e objetivas`,
-            messages: [
-                { role: "user", content: request.body.message },
-            ],
-            prompt: request.body.message,
-        })
+    try {
+        const text = await genkitEndpoint(request.body.message);
+        console.log('passei aqui')
         reply.send({ message: text });
+    } catch (error) {
+        console.error('Erro no chat:', error);
+        reply.status(500).send({ error: 'Erro ao processar mensagem' });
     }
+}
         
 }
