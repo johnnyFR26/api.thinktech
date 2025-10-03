@@ -1,11 +1,11 @@
-import { gemini15Flash, googleAI } from '@genkit-ai/googleai';
+import { googleAI } from '@genkit-ai/googleai';
 import { genkit } from 'genkit';
 import { z } from 'genkit'
 import { db } from '../lib/db'
 
 export const ai = genkit({
   plugins: [googleAI()],
-  model: gemini15Flash,
+  model: googleAI.model('gemini-2.0-flash'),
 });
 
 const helloFlow = ai.defineFlow('helloFlow', async (name) => {
