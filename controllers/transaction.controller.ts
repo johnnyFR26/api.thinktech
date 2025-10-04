@@ -304,7 +304,8 @@ export class TransactionController {
                     include: {
                         category: true,
                         creditCard: true,
-                        objective: true
+                        objective: true,
+                        files: true
                     }
                 }),
                 db.transaction.count({ where })

@@ -48,6 +48,8 @@ model Transaction {
   destination String
   description String
 
+  files File[]
+
   accountId   String
   account     Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
@@ -77,6 +79,7 @@ model Category {
 
   transactions Transaction[]
   planningCategories PlanningCategories[]
+  files File[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -174,6 +177,10 @@ model File {
   categoryId    String?
   transactionId String?
   description   String?
+
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  transaction Transaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
