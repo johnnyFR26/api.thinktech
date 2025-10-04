@@ -170,7 +170,7 @@ model File {
   size          Int
   url           String
   blobPathname  String
-  userId        String?
+  userId        Int?
   categoryId    String?
   transactionId String?
   description   String?
