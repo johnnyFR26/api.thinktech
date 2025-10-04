@@ -162,6 +162,23 @@ model Invoice {
   updatedAt DateTime @updatedAt
 }
 
+model File {
+  id            String   @id @default(uuid())
+  originalName  String
+  storedName    String
+  mimeType      String
+  size          Int
+  url           String
+  blobPathname  String
+  userId        String?
+  categoryId    String?
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("files")
+}
+
 enum TransactionType {
   input
   output

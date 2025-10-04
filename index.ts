@@ -7,10 +7,14 @@ import { UsersResolver } from "./graphql/resolvers/users-resolver";
 import { gemini15Flash, googleAI } from '@genkit-ai/googleai';
 import { genkit } from 'genkit';
 import cors from "@fastify/cors"
+import multipart from '@fastify/multipart';
+
 
 const server = Fastify({ logger: true });
 
 registerRoutes(server);
+
+server.register(multipart);
 
 
 export const ai = genkit({
