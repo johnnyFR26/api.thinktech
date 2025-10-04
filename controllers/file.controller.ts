@@ -67,7 +67,10 @@ export class FileController {
                  size: fileRecord.size
               });
         } catch (error) {
-            return reply.status(500).send({ error: 'Error uploading file' });
+            return reply.status(500).send({
+        error: 'Erro ao processar upload',
+        details: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
         }
     }
 }
