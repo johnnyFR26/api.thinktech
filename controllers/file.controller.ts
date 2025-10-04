@@ -53,7 +53,7 @@ export class FileController {
                          size: buffer.length,
                          url: blob.url,
                        blobPathname: blob.pathname,
-                       userId: userId || null,
+                       userId: Number(userId) || null,
                        transactionId: transactionId || null,
                        categoryId: categoryId || null,
                       description: description || null
