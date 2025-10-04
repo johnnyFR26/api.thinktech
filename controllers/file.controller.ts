@@ -32,6 +32,7 @@ export class FileController {
             const buffer = await data.toBuffer()
 
             const blob = await put(uniqueFileName, buffer, {
+                token: process.env.S3_READ_WRITE_TOKEN,
                 access: 'public',
                 contentType: data.mimetype,
                 addRandomSuffix: false
