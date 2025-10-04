@@ -43,17 +43,18 @@ export class FileController {
               const userId = fields.userId?.value;
               const categoryId = fields.categoryId?.value;
                const description = fields.description?.value;
+               const transactionId = fields.transactionId?.value;
 
-      // Salvar metadata no banco de dados
                  const fileRecord = await db.file.create({
                       data: {
                          originalName: data.filename,
                           storedName: uniqueFileName,
                         mimeType: data.mimetype,
                          size: buffer.length,
-                         url: blob.url, // URL pública do Vercel Blob
-                       blobPathname: blob.pathname, // Caminho para deletar depois
+                         url: blob.url,
+                       blobPathname: blob.pathname,
                        userId: userId || null,
+                       transactionId: transactionId || null,
                        categoryId: categoryId || null,
                       description: description || null
                 }
