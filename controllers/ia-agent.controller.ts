@@ -13,9 +13,10 @@ export class IaAgentController {
         reply.send({ message: text });
     }
 
-    async chat(request: FastifyRequest<{ Body: { message: string } }>, reply: FastifyReply) {
+    async chat(request: FastifyRequest<{ Body: { message: string }, Params: { userId: number } }>, reply: FastifyReply) {
+        const { userId } = request.params
     try {
-        const text = await genkitEndpoint(request.body.message);
+        const text = await genkitEndpoint(userId, request.body.message);
         console.log('passei aqui')
         reply.send({ message: text });
     } catch (error) {
