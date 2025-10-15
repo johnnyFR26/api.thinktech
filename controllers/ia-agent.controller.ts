@@ -1,5 +1,11 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { ai, genkitEndpoint } from "../lib/zzinho";
+import { Chat } from "genkit";
+
+type ChatMessage = {
+  role: 'user' | 'model';
+  content: string;
+};
 
 export class IaAgentController {
     async message(request: FastifyRequest<{ Body: { message: string } }>, reply: FastifyReply) {
@@ -13,10 +19,14 @@ export class IaAgentController {
         reply.send({ message: text });
     }
 
-    async chat(request: FastifyRequest<{ Body: { message: string }, Params: { userId: number } }>, reply: FastifyReply) {
+    async chat(request: FastifyRequest<{
+         Body: { message: string, history: ChatMessage[] },
+        Params: { userId: number } 
+    }>, reply: FastifyReply) {
         const { userId } = request.params
+        const  history  = request.body.history || []
     try {
-        const text = await genkitEndpoint(userId, request.body.message);
+        const text = await genkitEndpoint(userId, request.body.message, history);
         console.log('passei aqui')
         reply.send({ message: text });
     } catch (error) {

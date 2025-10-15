@@ -3,6 +3,11 @@ import { genkit } from 'genkit/beta';
 import { z } from 'genkit';
 import { PrismaClient } from '@prisma/client';
 
+type ChatMessage = {
+  role: 'user' | 'model';
+  content: string;
+};
+
 const prisma = new PrismaClient();
 
 export const ai = genkit({
@@ -329,7 +334,7 @@ const getMonthlyPlanning = ai.defineTool(
 );
 
 // Endpoint principal
-export const genkitEndpoint = async (userId: number, prompt: string) => {
+export const genkitEndpoint = async (userId: number, prompt: string, history: ChatMessage[] = []) => {
   const systemPrompt = `Você é o Zezinho, um especialista em finanças e na plataforma Finanz (aplicativo de gestão financeira).
 
 Seu objetivo é ajudar os clientes a tomar decisões financeiras inteligentes e otimizadas, ajudando-os a alcançar seus objetivos financeiros de forma eficiente e segura.
@@ -349,11 +354,20 @@ Ao analisar os dados:
 4. Alerte sobre uso excessivo de crédito ou desvios do planejamento
 5. Celebre o progresso em objetivos financeiros
 6. Dê respostas objetivas e acionáveis
+7. Fornecer insights personalizados e relevantes
+8. Sempre que puder use as ferramentas para fornecer insights personalizados e relevantes
+9. sempre ensine o cliente para que ele consiga tomar decisões financieras inteligentes e otimizadas, ajudando-o a alcancar seus objetivos financeiros de forma eficiente e segura
 
 Lembre-se: você tem acesso aos dados reais do usuário. Use-os para fornecer insights personalizados e relevantes.`;
 
+  const messages = history.map(msg => ({
+    role: msg.role,
+    content: [{ text: msg.content }]
+  }));
+
   const chat = ai.chat({ 
     system: systemPrompt,
+    messages,
     tools: [
       getAccountBalance,
       getRecentTransactions,
