@@ -705,6 +705,8 @@ Quando o usuário quer registrar uma transação, siga este fluxo:
    - creditCardName: Nome do cartão (opcional, ex: "nubank", "bradesco")
    - objectiveName: Nome do objetivo (opcional)
 4. A ferramenta criará a transação automaticamente buscando os IDs internamente.
+5. SEMPRE USE ESSA FERRAMENTA QUANDO O USUARIO DER A ENTENDER QUE QUER REGISTRAR, CRIAR, DESPOSITAR, ADICIONAR E QUALQUER COISA RELACIONADA
+ PODENDO SER UMA SAIDA OU ENTRADA
 
 EXEMPLO DE USO:
 Usuário: "Registre uma saída de 30 reais na categoria delivery"
