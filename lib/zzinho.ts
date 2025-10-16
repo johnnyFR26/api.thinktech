@@ -262,214 +262,6 @@ const getCreditCards = ai.defineTool(
   }
 );
 
-// Ferramenta: Criar transação
-const createTransaction = ai.defineTool(
-  {
-    name: "createTransaction",
-    description: "Cria uma nova transação com atualização de saldo, cartão de crédito, planejamento e objetivos",
-    inputSchema: z.object({
-      userId: z.number().describe("ID do usuário"),
-      accountId: z.string().describe("ID da conta"),
-      value: z.number().describe("Valor da transação"),
-      type: z.enum(["input", "output"]).describe("Tipo de transação: input (entrada) ou output (saída)"),
-      destination: z.string().describe("Destino ou origem da transação"),
-      description: z.string().describe("Descrição da transação"),
-      categoryId: z.string().describe("ID da categoria"),
-      creditCardId: z.string().optional().describe("ID do cartão de crédito (opcional)"),
-      objectiveId: z.string().optional().describe("ID do objetivo (opcional)"),
-    }),
-    outputSchema: z.object({
-      success: z.boolean().optional(),
-      transactionId: z.string().optional(),
-      newAccountBalance: z.number().optional(),
-      creditCardUpdate: z.object({
-        availableLimit: z.number().optional(),
-      }).optional(),
-      planningUpdate: z.object({
-        updatedRecords: z.number().optional(),
-      }).optional(),
-      message: z.string().optional(),
-    }),
-  },
-  async ({ userId, accountId, value, type, destination, description, categoryId, creditCardId, objectiveId }) => {
-    try {
-      // Validar conta
-      const account = await prisma.account.findUnique({
-        where: { id: accountId, userId },
-        select: { id: true, currentValue: true },
-      });
-
-      if (!account) {
-        throw new Error("Conta não encontrada");
-      }
-
-      // Validar categoria
-      const category = await prisma.category.findFirst({
-        where: { 
-          id: categoryId,
-          accountId: accountId 
-        },
-      });
-
-      if (!category) {
-        throw new Error("Categoria não encontrada ou não pertence à conta");
-      }
-
-      let invoiceId: string | undefined;
-      let creditCardUpdate = null;
-
-      // Processar cartão de crédito se fornecido
-      if (creditCardId) {
-        const creditCard = await prisma.creditCard.findFirst({
-          where: { 
-            id: creditCardId,
-            accountId: accountId
-          },
-          include: { invoices: true }
-        });
-
-        if (!creditCard) {
-          throw new Error("Cartão de crédito não encontrado ou não pertence à conta");
-        }
-
-        // Gerenciar fatura
-        if (creditCard.invoices.length === 0) {
-          const invoice = await prisma.invoice.create({
-            data: {
-              creditCardId: creditCard.id,
-              closingDate: new Date(creditCard.close),
-              dueDate: new Date(creditCard.expire)
-            }
-          });
-          invoiceId = invoice.id;
-        } else {
-          invoiceId = creditCard.invoices[creditCard.invoices.length - 1].id;
-        }
-
-        // Atualizar limite disponível do cartão
-        creditCardUpdate = await prisma.creditCard.update({
-          where: { id: creditCard.id },
-          data: {
-            availableLimit: {
-              decrement: value
-            }
-          },
-          select: { availableLimit: true }
-        });
-      }
-
-      // Validar objetivo se fornecido
-      if (objectiveId) {
-        const objective = await prisma.objective.findFirst({
-          where: { 
-            id: objectiveId,
-            accountId: accountId 
-          }
-        });
-
-        if (!objective) {
-          throw new Error("Objetivo não encontrado ou não pertence à conta");
-        }
-      }
-
-      // Processar planejamento
-      let planningUpdate = null;
-      const planningCategories = await prisma.planningCategories.findMany({
-        where: {
-          categoryId: categoryId
-        },
-        select: {
-          id: true,
-          planningId: true
-        }
-      });
-
-      if (planningCategories.length > 0) {
-        const categoryIds = planningCategories.map(pc => pc.id);
-        const planningIds = [...new Set(planningCategories.map(pc => pc.planningId))];
-
-        // Atualizar limites disponíveis das categorias de planejamento
-        await prisma.planningCategories.updateMany({
-          where: {
-            id: {
-              in: categoryIds
-            }
-          },
-          data: {
-            availableLimit: {
-              decrement: value
-            }
-          }
-        });
-
-        // Atualizar limite disponível do planejamento
-        planningUpdate = await prisma.planning.updateMany({
-          where: {
-            id: {
-              in: planningIds
-            }
-          },
-          data: {
-            availableLimit: {
-              decrement: value
-            }
-          }
-        });
-      }
-
-      // Criar transação
-      const transaction = await prisma.transaction.create({
-        data: {
-          value: new Decimal(value),
-          description,
-          type,
-          destination,
-          accountId,
-          categoryId,
-          ...(creditCardId && { creditCardId }),
-          ...(objectiveId && { objectiveId }),
-          ...(invoiceId && { invoiceId })
-        }
-      });
-
-      // Atualizar saldo da conta
-      let accountUpdate;
-      if (type === "output") {
-        accountUpdate = await prisma.account.update({
-          where: { id: accountId },
-          data: {
-            currentValue: {
-              decrement: value
-            }
-          },
-          select: { currentValue: true }
-        });
-      } else {
-        accountUpdate = await prisma.account.update({
-          where: { id: accountId },
-          data: {
-            currentValue: {
-              increment: value
-            }
-          },
-          select: { currentValue: true }
-        });
-      }
-
-      return {
-        success: true,
-        transactionId: transaction.id,
-        newAccountBalance: Number(accountUpdate.currentValue),
-        creditCardUpdate: creditCardUpdate ? { availableLimit: Number(creditCardUpdate.availableLimit) } : undefined,
-        planningUpdate: planningUpdate ? { updatedRecords: planningUpdate.count } : undefined,
-        message: `Transação criada com sucesso! Novo saldo: ${accountUpdate.currentValue}`,
-      };
-    } catch (error: any) {
-      throw new Error(`Erro ao criar transação: ${error.message}`);
-    }
-  }
-);
-
 // Ferramenta: Verificar planejamento mensal
 const getMonthlyPlanning = ai.defineTool(
   {
@@ -542,33 +334,398 @@ const getMonthlyPlanning = ai.defineTool(
   }
 );
 
+// Ferramenta: Buscar categoria por nome
+const getCategoryByName = ai.defineTool(
+  {
+    name: "getCategoryByName",
+    description: "Busca uma categoria pelo nome (parcial)",
+    inputSchema: z.object({
+      userId: z.number().describe("ID do usuário"),
+      categoryName: z.string().describe("Nome da categoria a buscar"),
+    }),
+    outputSchema: z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+    })).nullable(),
+  },
+  async ({ userId, categoryName }) => {
+    const account = await prisma.account.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!account) {
+      throw new Error("Conta não encontrada");
+    }
+
+    const categories = await prisma.category.findMany({
+      where: {
+        accountId: account.id,
+        name: {
+          contains: categoryName,
+          mode: 'insensitive',
+        },
+      },
+      select: { id: true, name: true },
+    });
+
+    return categories.length > 0 ? categories : null;
+  }
+);
+
+// Ferramenta: Buscar cartão de crédito por nome
+const getCreditCardByName = ai.defineTool(
+  {
+    name: "getCreditCardByName",
+    description: "Busca um cartão de crédito pelo nome ou empresa",
+    inputSchema: z.object({
+      userId: z.number().describe("ID do usuário"),
+      cardName: z.string().describe("Nome ou empresa do cartão a buscar"),
+    }),
+    outputSchema: z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+      company: z.string(),
+      availableLimit: z.number(),
+    })).nullable(),
+  },
+  async ({ userId, cardName }) => {
+    const account = await prisma.account.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!account) {
+      throw new Error("Conta não encontrada");
+    }
+
+    const creditCards = await prisma.creditCard.findMany({
+      where: {
+        accountId: account.id,
+        OR: [
+          {
+            name: {
+              contains: cardName,
+              mode: 'insensitive',
+            },
+          },
+          {
+            company: {
+              contains: cardName,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      },
+      select: { id: true, name: true, company: true, availableLimit: true },
+    });
+
+    return creditCards.length > 0 ? creditCards.map(card => ({
+      id: card.id,
+      name: card.name,
+      company: card.company,
+      availableLimit: Number(card.availableLimit),
+    })) : null;
+  }
+);
+
+// Ferramenta: Buscar objetivo por nome
+const getObjectiveByName = ai.defineTool(
+  {
+    name: "getObjectiveByName",
+    description: "Busca um objetivo financeiro pelo nome",
+    inputSchema: z.object({
+      userId: z.number().describe("ID do usuário"),
+      objectiveName: z.string().describe("Nome do objetivo a buscar"),
+    }),
+    outputSchema: z.array(z.object({
+      id: z.string(),
+      title: z.string(),
+      limit: z.number(),
+    })).nullable(),
+  },
+  //@ts-ignore
+  async ({ userId, objectiveName }) => {
+    const account = await prisma.account.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!account) {
+      throw new Error("Conta não encontrada");
+    }
+
+    const objectives = await prisma.objective.findMany({
+      where: {
+        accountId: account.id,
+        title: {
+          contains: objectiveName,
+          mode: 'insensitive',
+        },
+      },
+      select: { id: true, title: true, limit: true },
+    });
+
+    return objectives.length > 0 ? objectives : null;
+  }
+);
+
+// Ferramenta: Criar transação com nomes
+const createTransactionByName = ai.defineTool(
+  {
+    name: "createTransactionByName",
+    description: "Cria uma transação usando nomes em vez de IDs. Busca automaticamente a conta, categoria e outros dados.",
+    inputSchema: z.object({
+      userId: z.number().describe("ID do usuário"),
+      value: z.number().describe("Valor da transação"),
+      type: z.enum(["input", "output"]).describe("Tipo: input (entrada) ou output (saída)"),
+      destination: z.string().describe("Destino ou origem"),
+      description: z.string().describe("Descrição da transação"),
+      categoryName: z.string().describe("Nome da categoria"),
+      creditCardName: z.string().optional().describe("Nome do cartão de crédito (opcional)"),
+      objectiveName: z.string().optional().describe("Nome do objetivo (opcional)"),
+    }),
+    outputSchema: z.object({
+      success: z.boolean().optional(),
+      transactionId: z.string().optional(),
+      newAccountBalance: z.number().optional(),
+      message: z.string().optional(),
+    }),
+  },
+  async ({ userId, value, type, destination, description, categoryName, creditCardName, objectiveName }) => {
+    try {
+      // Buscar conta
+      const account = await prisma.account.findUnique({
+        where: { userId },
+        select: { id: true, currentValue: true },
+      });
+
+      if (!account) {
+        throw new Error("Conta não encontrada para este usuário");
+      }
+
+      // Buscar categoria
+      const categories = await prisma.category.findMany({
+        where: {
+          accountId: account.id,
+          name: {
+            contains: categoryName,
+            mode: 'insensitive',
+          },
+        },
+      });
+
+      if (categories.length === 0) {
+        throw new Error(`Nenhuma categoria encontrada com o nome "${categoryName}"`);
+      }
+
+      if (categories.length > 1) {
+        const categoryList = categories.map(c => `- ${c.name} (ID: ${c.id})`).join('\n');
+        throw new Error(`Múltiplas categorias encontradas:\n${categoryList}\nPor favor, seja mais específico.`);
+      }
+
+      const categoryId = categories[0].id;
+
+      // Buscar cartão de crédito se fornecido
+      let creditCardId: string | undefined;
+      if (creditCardName) {
+        const creditCards = await prisma.creditCard.findMany({
+          where: {
+            accountId: account.id,
+            OR: [
+              { name: { contains: creditCardName, mode: 'insensitive' } },
+              { company: { contains: creditCardName, mode: 'insensitive' } },
+            ],
+          },
+        });
+
+        if (creditCards.length === 0) {
+          throw new Error(`Nenhum cartão encontrado com o nome "${creditCardName}"`);
+        }
+
+        if (creditCards.length > 1) {
+          const cardList = creditCards.map(c => `- ${c.name || c.company} (Limite: ${c.availableLimit})`).join('\n');
+          throw new Error(`Múltiplos cartões encontrados:\n${cardList}\nPor favor, seja mais específico.`);
+        }
+
+        creditCardId = creditCards[0].id;
+      }
+
+      // Buscar objetivo se fornecido
+      let objectiveId: string | undefined;
+      if (objectiveName) {
+        const objectives = await prisma.objective.findMany({
+          where: {
+            accountId: account.id,
+            title: {
+              contains: objectiveName,
+              mode: 'insensitive',
+            },
+          },
+        });
+
+        if (objectives.length === 0) {
+          throw new Error(`Nenhum objetivo encontrado com o nome "${objectiveName}"`);
+        }
+
+        if (objectives.length > 1) {
+          const objectiveList = objectives.map(o => `- ${o.title}`).join('\n');
+          throw new Error(`Múltiplos objetivos encontrados:\n${objectiveList}\nPor favor, seja mais específico.`);
+        }
+
+        objectiveId = objectives[0].id;
+      }
+
+      // Processar cartão e fatura
+      let invoiceId: string | undefined;
+      if (creditCardId) {
+        const creditCard = await prisma.creditCard.findUnique({
+          where: { id: creditCardId },
+          include: { invoices: { where: { status: true } } },
+        });
+
+        if (!creditCard) {
+          throw new Error("Cartão de crédito não encontrado");
+        }
+
+        if (creditCard.invoices.length === 0) {
+          const invoice = await prisma.invoice.create({
+            data: {
+              creditCardId: creditCard.id,
+              closingDate: new Date(creditCard.close),
+              dueDate: new Date(creditCard.expire),
+            },
+          });
+          invoiceId = invoice.id;
+        } else {
+          invoiceId = creditCard.invoices[creditCard.invoices.length - 1].id;
+        }
+
+        await prisma.creditCard.update({
+          where: { id: creditCard.id },
+          data: {
+            availableLimit: {
+              decrement: value,
+            },
+          },
+        });
+      }
+
+      // Processar planejamento
+      const planningCategories = await prisma.planningCategories.findMany({
+        where: { categoryId },
+        select: { id: true, planningId: true },
+      });
+
+      if (planningCategories.length > 0) {
+        const categoryIds = planningCategories.map(pc => pc.id);
+        const planningIds = [...new Set(planningCategories.map(pc => pc.planningId))];
+
+        await prisma.planningCategories.updateMany({
+          where: { id: { in: categoryIds } },
+          data: { availableLimit: { decrement: value } },
+        });
+
+        await prisma.planning.updateMany({
+          where: { id: { in: planningIds } },
+          data: { availableLimit: { decrement: value } },
+        });
+      }
+
+      // Criar transação
+      const transaction = await prisma.transaction.create({
+        data: {
+          value: new Decimal(value),
+          description,
+          type,
+          destination,
+          accountId: account.id,
+          categoryId,
+          ...(creditCardId && { creditCardId }),
+          ...(objectiveId && { objectiveId }),
+          ...(invoiceId && { invoiceId }),
+        },
+      });
+
+      // Atualizar saldo
+      const accountUpdate = await prisma.account.update({
+        where: { id: account.id },
+        data: {
+          currentValue:
+            type === "output"
+              ? { decrement: value }
+              : { increment: value },
+        },
+        select: { currentValue: true },
+      });
+
+      return {
+        success: true,
+        transactionId: transaction.id,
+        newAccountBalance: Number(accountUpdate.currentValue),
+        message: `✓ Transação registrada! Novo saldo: R$ ${Number(accountUpdate.currentValue).toFixed(2)}`,
+      };
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+);
+
 // Endpoint principal
 export const genkitEndpoint = async (userId: number, prompt: string, history: ChatMessage[] = []) => {
   const systemPrompt = `Você é o Zezinho, um especialista em finanças e na plataforma Finanz (aplicativo de gestão financeira).
 
 Seu objetivo é ajudar os clientes a tomar decisões financeiras inteligentes e otimizadas, ajudando-os a alcançar seus objetivos financeiros de forma eficiente e segura.
 
-Você tem acesso às seguintes ferramentas para analisar os dados financeiros do usuário:
-- getAccountBalance: Para verificar o saldo atual
-- getRecentTransactions: Para analisar transações recentes
-- getSpendingByCategory: Para entender onde o dinheiro está sendo gasto
-- getObjectives: Para verificar progresso em objetivos financeiros
-- getCreditCards: Para analisar uso de cartões de crédito
-- getMonthlyPlanning: Para verificar o planejamento mensal
-- createTransaction: Para criar uma nova transação de entrada ou saida
+Você tem acesso às seguintes ferramentas:
 
-Ao analisar os dados:
+FERRAMENTAS DE CONSULTA:
+- getAccountBalance: Verifica o saldo atual da conta
+- getRecentTransactions: Analisa transações recentes
+- getSpendingByCategory: Entende onde o dinheiro está sendo gasto
+- getObjectives: Verifica progresso em objetivos financeiros
+- getCreditCards: Analisa cartões de crédito disponíveis
+- getMonthlyPlanning: Verifica o planejamento mensal
+
+FERRAMENTAS DE BUSCA POR NOME:
+- getCategoryByName: Busca categorias pelo nome (use isso antes de criar transações)
+- getCreditCardByName: Busca cartões de crédito pelo nome (use isso para identificar cartões)
+- getObjectiveByName: Busca objetivos pelo nome
+
+FERRAMENTAS DE AÇÃO:
+- createTransactionByName: Cria transações usando NOMES em vez de IDs (ferramenta principal para criar transações)
+
+IMPORTANTE - FLUXO PARA CRIAR TRANSAÇÕES:
+Quando o usuário quer registrar uma transação, siga este fluxo:
+
+1. Se o usuário menciona um cartão, use getCreditCardByName para buscar. Se houver múltiplos, pergunte qual ele quer usar.
+2. Se o usuário menciona um objetivo, use getObjectiveByName para buscar.
+3. Use createTransactionByName com os NOMES (não IDs):
+   - categoryName: Nome da categoria (ex: "delivery", "alimentação", "uber")
+   - creditCardName: Nome do cartão (opcional, ex: "nubank", "bradesco")
+   - objectiveName: Nome do objetivo (opcional)
+4. A ferramenta criará a transação automaticamente buscando os IDs internamente.
+
+EXEMPLO DE USO:
+Usuário: "Registre uma saída de 30 reais na categoria delivery"
+Você: Cria transação com createTransactionByName(userId, 30, "output", "Delivery", "Gasto com entrega", "delivery")
+
+Usuário: "Registre um gasto de 50 no cartão nubank em alimentação"
+Você: Cria transação com createTransactionByName(userId, 50, "output", "Alimentação", "Compra de alimentos", "alimentação", "nubank")
+
+REGRAS:
 1. Sempre use o userId fornecido (${userId}) ao chamar as ferramentas
-2. Seja específico e baseie suas recomendações nos dados reais do usuário
-3. Identifique padrões de gastos e oportunidades de economia
-4. Alerte sobre uso excessivo de crédito ou desvios do planejamento
-5. Celebre o progresso em objetivos financeiros
-6. Dê respostas objetivas e acionáveis
-7. Fornecer insights personalizados e relevantes
-8. Sempre que puder use as ferramentas para fornecer insights personalizados e relevantes
-9. sempre ensine o cliente para que ele consiga tomar decisões financieras inteligentes e otimizadas, ajudando-o a alcancar seus objetivos financeiros de forma eficiente e segura
+2. NUNCA peça IDs ao usuário - use as ferramentas de busca por nome
+3. Se um campo não for especificado, tente inferir pelo contexto
+4. Se não conseguir encontrar um item (categoria, cartão, objetivo), avise o usuário com uma mensagem clara
+5. Seja específico e baseie suas recomendações nos dados reais do usuário
+6. Identifique padrões de gastos e oportunidades de economia
+7. Alerte sobre uso excessivo de crédito ou desvios do planejamento
+8. Celebre o progresso em objetivos financeiros
+9. Dê respostas objetivas e acionáveis
+10. Ensine o cliente para que consiga tomar decisões financeiras inteligentes e otimizadas
 
-Lembre-se: você tem acesso aos dados reais do usuário. Use-os para fornecer insights personalizados e relevantes.`;
+Lembre-se: você tem acesso aos dados reais do usuário e ferramentas para buscar por nome. Use-os para fornecer uma experiência conversacional sem pedir IDs.`;
 
   const messages = history.map(msg => ({
     role: msg.role,
@@ -585,7 +742,10 @@ Lembre-se: você tem acesso aos dados reais do usuário. Use-os para fornecer in
       getObjectives,
       getCreditCards,
       getMonthlyPlanning,
-      createTransaction,
+      getCategoryByName,
+      getCreditCardByName,
+      getObjectiveByName,
+      createTransactionByName,
     ],
   });
   
