@@ -2,6 +2,7 @@ import { googleAI } from '@genkit-ai/googleai';
 import { genkit } from 'genkit/beta';
 import { z } from 'genkit';
 import { PrismaClient } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 
 type ChatMessage = {
   role: 'user' | 'model';
@@ -261,6 +262,214 @@ const getCreditCards = ai.defineTool(
   }
 );
 
+// Ferramenta: Criar transação
+const createTransaction = ai.defineTool(
+  {
+    name: "createTransaction",
+    description: "Cria uma nova transação com atualização de saldo, cartão de crédito, planejamento e objetivos",
+    inputSchema: z.object({
+      userId: z.number().describe("ID do usuário"),
+      accountId: z.string().describe("ID da conta"),
+      value: z.number().describe("Valor da transação"),
+      type: z.enum(["input", "output"]).describe("Tipo de transação: input (entrada) ou output (saída)"),
+      destination: z.string().describe("Destino ou origem da transação"),
+      description: z.string().describe("Descrição da transação"),
+      categoryId: z.string().describe("ID da categoria"),
+      creditCardId: z.string().optional().describe("ID do cartão de crédito (opcional)"),
+      objectiveId: z.string().optional().describe("ID do objetivo (opcional)"),
+    }),
+    outputSchema: z.object({
+      success: z.boolean().optional(),
+      transactionId: z.string().optional(),
+      newAccountBalance: z.number().optional(),
+      creditCardUpdate: z.object({
+        availableLimit: z.number().optional(),
+      }).optional(),
+      planningUpdate: z.object({
+        updatedRecords: z.number().optional(),
+      }).optional(),
+      message: z.string().optional(),
+    }),
+  },
+  async ({ userId, accountId, value, type, destination, description, categoryId, creditCardId, objectiveId }) => {
+    try {
+      // Validar conta
+      const account = await prisma.account.findUnique({
+        where: { id: accountId, userId },
+        select: { id: true, currentValue: true },
+      });
+
+      if (!account) {
+        throw new Error("Conta não encontrada");
+      }
+
+      // Validar categoria
+      const category = await prisma.category.findFirst({
+        where: { 
+          id: categoryId,
+          accountId: accountId 
+        },
+      });
+
+      if (!category) {
+        throw new Error("Categoria não encontrada ou não pertence à conta");
+      }
+
+      let invoiceId: string | undefined;
+      let creditCardUpdate = null;
+
+      // Processar cartão de crédito se fornecido
+      if (creditCardId) {
+        const creditCard = await prisma.creditCard.findFirst({
+          where: { 
+            id: creditCardId,
+            accountId: accountId
+          },
+          include: { invoices: true }
+        });
+
+        if (!creditCard) {
+          throw new Error("Cartão de crédito não encontrado ou não pertence à conta");
+        }
+
+        // Gerenciar fatura
+        if (creditCard.invoices.length === 0) {
+          const invoice = await prisma.invoice.create({
+            data: {
+              creditCardId: creditCard.id,
+              closingDate: new Date(creditCard.close),
+              dueDate: new Date(creditCard.expire)
+            }
+          });
+          invoiceId = invoice.id;
+        } else {
+          invoiceId = creditCard.invoices[creditCard.invoices.length - 1].id;
+        }
+
+        // Atualizar limite disponível do cartão
+        creditCardUpdate = await prisma.creditCard.update({
+          where: { id: creditCard.id },
+          data: {
+            availableLimit: {
+              decrement: value
+            }
+          },
+          select: { availableLimit: true }
+        });
+      }
+
+      // Validar objetivo se fornecido
+      if (objectiveId) {
+        const objective = await prisma.objective.findFirst({
+          where: { 
+            id: objectiveId,
+            accountId: accountId 
+          }
+        });
+
+        if (!objective) {
+          throw new Error("Objetivo não encontrado ou não pertence à conta");
+        }
+      }
+
+      // Processar planejamento
+      let planningUpdate = null;
+      const planningCategories = await prisma.planningCategories.findMany({
+        where: {
+          categoryId: categoryId
+        },
+        select: {
+          id: true,
+          planningId: true
+        }
+      });
+
+      if (planningCategories.length > 0) {
+        const categoryIds = planningCategories.map(pc => pc.id);
+        const planningIds = [...new Set(planningCategories.map(pc => pc.planningId))];
+
+        // Atualizar limites disponíveis das categorias de planejamento
+        await prisma.planningCategories.updateMany({
+          where: {
+            id: {
+              in: categoryIds
+            }
+          },
+          data: {
+            availableLimit: {
+              decrement: value
+            }
+          }
+        });
+
+        // Atualizar limite disponível do planejamento
+        planningUpdate = await prisma.planning.updateMany({
+          where: {
+            id: {
+              in: planningIds
+            }
+          },
+          data: {
+            availableLimit: {
+              decrement: value
+            }
+          }
+        });
+      }
+
+      // Criar transação
+      const transaction = await prisma.transaction.create({
+        data: {
+          value: new Decimal(value),
+          description,
+          type,
+          destination,
+          accountId,
+          categoryId,
+          ...(creditCardId && { creditCardId }),
+          ...(objectiveId && { objectiveId }),
+          ...(invoiceId && { invoiceId })
+        }
+      });
+
+      // Atualizar saldo da conta
+      let accountUpdate;
+      if (type === "output") {
+        accountUpdate = await prisma.account.update({
+          where: { id: accountId },
+          data: {
+            currentValue: {
+              decrement: value
+            }
+          },
+          select: { currentValue: true }
+        });
+      } else {
+        accountUpdate = await prisma.account.update({
+          where: { id: accountId },
+          data: {
+            currentValue: {
+              increment: value
+            }
+          },
+          select: { currentValue: true }
+        });
+      }
+
+      return {
+        success: true,
+        transactionId: transaction.id,
+        newAccountBalance: Number(accountUpdate.currentValue),
+        creditCardUpdate: creditCardUpdate ? { availableLimit: Number(creditCardUpdate.availableLimit) } : undefined,
+        planningUpdate: planningUpdate ? { updatedRecords: planningUpdate.count } : undefined,
+        message: `Transação criada com sucesso! Novo saldo: ${accountUpdate.currentValue}`,
+      };
+    } catch (error: any) {
+      throw new Error(`Erro ao criar transação: ${error.message}`);
+    }
+  }
+);
+
 // Ferramenta: Verificar planejamento mensal
 const getMonthlyPlanning = ai.defineTool(
   {
@@ -346,6 +555,7 @@ Você tem acesso às seguintes ferramentas para analisar os dados financeiros do
 - getObjectives: Para verificar progresso em objetivos financeiros
 - getCreditCards: Para analisar uso de cartões de crédito
 - getMonthlyPlanning: Para verificar o planejamento mensal
+- createTransaction: Para criar uma nova transação de entrada ou saida
 
 Ao analisar os dados:
 1. Sempre use o userId fornecido (${userId}) ao chamar as ferramentas
@@ -375,6 +585,7 @@ Lembre-se: você tem acesso aos dados reais do usuário. Use-os para fornecer in
       getObjectives,
       getCreditCards,
       getMonthlyPlanning,
+      createTransaction,
     ],
   });
   
