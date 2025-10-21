@@ -39,6 +39,7 @@ model Account {
   objectives   Objective[]
   plannings    Planning[]
   creditCards  CreditCard[]
+  holdings Holding[]
 }
 
 model Transaction {
@@ -185,6 +186,36 @@ model File {
   updatedAt     DateTime @updatedAt
 
   @@map("files")
+}
+
+model Holding {
+  id String @id @default(uuid())
+  name String
+  tax Decimal
+  dueDate DateTime
+  total Decimal
+  controls Json?
+
+  accountId String
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  movimentations Moviment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Moviment {
+  id String @id @default(uuid())
+  value Decimal
+  type TransactionType
+  holdingId String
+  controls Json?
+
+  holding Holding @relation(fields: [holdingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum TransactionType {
