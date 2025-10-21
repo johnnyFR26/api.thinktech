@@ -10,6 +10,8 @@ import InvoiceRoutes from './invoice.routes';
 import PlanningRoutes from './planning.routes';
 import IaAgentRoutes from './ai-agent.routes';
 import FileRoutes from './file.routes';
+import HoldingRoutes from './holding.routes';
+import MovimentRoutes from './moviment.route';
 
 /**
  * Registers all application routes with the provided Fastify server instance.
@@ -29,4 +31,6 @@ export const registerRoutes = async (server: FastifyInstance) => {
   await server.register(PlanningRoutes)
   await server.register(IaAgentRoutes)
   await server.register(FileRoutes)
+  await server.register(HoldingRoutes)
+  await server.register(MovimentRoutes)
 };
