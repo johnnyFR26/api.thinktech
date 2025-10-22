@@ -60,12 +60,12 @@ export class AuthController {
         })
 
         if(!user) {
-            return reply.status(404).send({error: 'User not found'})
+            return reply.status(404).send({error: 'Usuário não encontrado, por favor cadastre-se'})
         }
 
         const isValidPassword = await bcrypt.compare(data.password, user.password)
         if(!isValidPassword) {
-            return reply.status(401).send({error: 'Invalid password'})
+            return reply.status(401).send({error: 'Senha inválida'})
         }else{
               const token = await jwt.sign({email: user.email}, process.env.JWT_SECRET, {expiresIn: '1d'})
               
