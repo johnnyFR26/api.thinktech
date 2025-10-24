@@ -9,24 +9,27 @@ datasource db {
 
 model User {
   id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  phone     String
-  password  String
-  cpf       String
-  controls  Json?
+  name      String   @db.VarChar(255)
+  email     String   @unique @db.VarChar(255)
+  phone     String   @db.VarChar(20)
+  password  String   @db.VarChar(255)
+  cpf       String   @db.VarChar(11)
+  controls  Json?    @db.JsonB
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   account   Account?
+
+  @@index([email])
+  @@index([cpf])
 }
 
 model Account {
   id           String    @id @default(uuid())
-  currentValue Decimal
+  currentValue Decimal   @db.Decimal(19, 2)
   currency     Currency  @default(BRL)
-  controls     Json?
+  controls     Json?     @db.JsonB
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -39,15 +42,17 @@ model Account {
   objectives   Objective[]
   plannings    Planning[]
   creditCards  CreditCard[]
-  holdings Holding[]
+  holdings     Holding[]
+
+  @@index([userId])
 }
 
 model Transaction {
   id          String          @id @default(uuid())
-  value       Decimal
+  value       Decimal         @db.Decimal(19, 2)
   type        TransactionType @default(output)
-  destination String
-  description String
+  destination String          @db.VarChar(255)
+  description String          @db.Text
 
   files File[]
 
@@ -68,12 +73,22 @@ model Transaction {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([accountId])
+  @@index([categoryId])
+  @@index([creditCardId])
+  @@index([invoiceId])
+  @@index([objectiveId])
+  @@index([createdAt])
+  @@index([accountId, createdAt])
+  @@index([type, accountId])
+  @@index([accountId, type, createdAt])
 }
 
 model Category {
   id        String       @id @default(uuid())
-  name      String
-  controls  Json?
+  name      String       @db.VarChar(255)
+  controls  Json?        @db.JsonB
 
   accountId String
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -84,17 +99,20 @@ model Category {
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([accountId])
+  @@index([accountId, name])
 }
 
 model CreditCard {
   id             String   @id @default(uuid())
-  name           String @default("")
-  availableLimit Decimal
-  limit          Decimal
-  company        String
-  expire         Int
-  close          Int
-  controls       Json?
+  name           String   @default("") @db.VarChar(100)
+  availableLimit Decimal  @db.Decimal(19, 2)
+  limit          Decimal  @db.Decimal(19, 2)
+  company        String   @db.VarChar(50)
+  expire         Int      @db.SmallInt
+  close          Int      @db.SmallInt
+  controls       Json?    @db.JsonB
 
   accountId String
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -104,12 +122,15 @@ model CreditCard {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([accountId])
+  @@index([accountId, close])
 }
 
 model Objective {
   id        String   @id @default(uuid())
-  title     String
-  limit     Decimal
+  title     String   @db.VarChar(255)
+  limit     Decimal  @db.Decimal(19, 2)
   milestone DateTime
 
   accountId String
@@ -119,14 +140,17 @@ model Objective {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([accountId])
+  @@index([accountId, milestone])
 }
 
 model Planning {
   id             String   @id @default(uuid())
-  availableLimit Decimal
-  limit          Decimal
+  availableLimit Decimal  @db.Decimal(19, 2)
+  limit          Decimal  @db.Decimal(19, 2)
   month          DateTime
-  title          String
+  title          String   @db.VarChar(255)
 
   accountId String
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -135,12 +159,16 @@ model Planning {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([accountId])
+  @@index([month])
+  @@index([accountId, month])
 }
 
 model PlanningCategories {
   id             String   @id @default(uuid())
-  availableLimit Decimal
-  limit          Decimal
+  availableLimit Decimal  @db.Decimal(19, 2)
+  limit          Decimal  @db.Decimal(19, 2)
 
   categoryId String
   planningId String
@@ -149,13 +177,17 @@ model PlanningCategories {
   planning Planning @relation(fields: [planningId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+
+  @@unique([categoryId, planningId])
+  @@index([planningId])
+  @@index([categoryId])
 }
 
 model Invoice {
   id          String   @id @default(uuid())
   dueDate     DateTime
   closingDate DateTime
-  status Boolean @default(true)
+  status      Boolean  @default(true)
   
   transactions Transaction[]
 
@@ -164,20 +196,26 @@ model Invoice {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([creditCardId])
+  @@index([dueDate])
+  @@index([status])
+  @@index([creditCardId, status])
+  @@index([creditCardId, dueDate])
 }
 
 model File {
   id            String   @id @default(uuid())
-  originalName  String
-  storedName    String
-  mimeType      String
+  originalName  String   @db.VarChar(255)
+  storedName    String   @db.VarChar(255)
+  mimeType      String   @db.VarChar(100)
   size          Int
-  url           String
-  blobPathname  String
+  url           String   @db.VarChar(500)
+  blobPathname  String   @db.VarChar(500)
   userId        Int?
   categoryId    String?
   transactionId String?
-  description   String?
+  description   String?  @db.Text
 
   category Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   transaction Transaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade)
@@ -186,15 +224,19 @@ model File {
   updatedAt     DateTime @updatedAt
 
   @@map("files")
+  @@index([categoryId])
+  @@index([transactionId])
+  @@index([userId])
+  @@index([categoryId, transactionId])
 }
 
 model Holding {
-  id String @id @default(uuid())
-  name String
-  tax Decimal
-  dueDate DateTime
-  total Decimal
-  controls Json?
+  id       String   @id @default(uuid())
+  name     String   @db.VarChar(255)
+  tax      Decimal  @db.Decimal(19, 2)
+  dueDate  DateTime
+  total    Decimal  @db.Decimal(19, 2)
+  controls Json?    @db.JsonB
 
   accountId String
   account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -203,19 +245,28 @@ model Holding {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([accountId])
+  @@index([dueDate])
+  @@index([accountId, dueDate])
 }
 
 model Moviment {
-  id String @id @default(uuid())
-  value Decimal
-  type TransactionType
+  id        String          @id @default(uuid())
+  value     Decimal         @db.Decimal(19, 2)
+  type      TransactionType
   holdingId String
-  controls Json?
+  controls  Json?           @db.JsonB
 
   holding Holding @relation(fields: [holdingId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([holdingId])
+  @@index([type])
+  @@index([holdingId, type])
+  @@index([holdingId, createdAt])
 }
 
 enum TransactionType {
