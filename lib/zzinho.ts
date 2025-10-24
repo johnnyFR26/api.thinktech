@@ -487,8 +487,8 @@ const createTransactionByName = ai.defineTool(
       destination: z.string().describe("Destino ou origem"),
       description: z.string().describe("Descrição da transação"),
       categoryName: z.string().describe("Nome da categoria"),
-      creditCardName: z.string().optional().describe("Nome do cartão de crédito (opcional)"),
-      objectiveName: z.string().optional().describe("Nome do objetivo (opcional)"),
+      creditCardName: z.string().optional().nullable().describe("Nome do cartão de crédito (opcional)"),
+      objectiveName: z.string().optional().nullable().describe("Nome do objetivo (opcional)"),
     }),
     outputSchema: z.object({
       success: z.boolean().optional(),
