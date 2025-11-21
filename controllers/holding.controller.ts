@@ -7,7 +7,12 @@ const createHoldingSchema = z.object({
     accountId: z.string().uuid(),
     controls: z.any().optional(),
     tax: z.number(),
-    dueDate: z.date(),
+    dueDate: z.preprocess(arg => {
+        if (typeof arg === 'string' || arg instanceof Date) {
+            return new Date(arg);
+        }
+        return arg;
+    }, z.date()),
     total: z.number()
 })
 
