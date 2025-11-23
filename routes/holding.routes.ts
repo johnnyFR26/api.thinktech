@@ -5,4 +5,5 @@ const controller = new HoldingController()
 export default async function HoldingRoutes(server: FastifyInstance) {
     server.post('/holdings', controller.create)
     server.get('/holdings/account/:accountId', controller.getByAccountId)
+    server.delete('/holdings/:holdingId', controller.delete)
 }

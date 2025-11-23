@@ -79,4 +79,22 @@ export class HoldingController {
             holdings
         })
     }
+
+    async delete(request: FastifyRequest<{ Params: { holdingId: string } }>, reply: FastifyReply) {
+        const { holdingId } = request.params
+
+        const holding = await db.holding.delete({
+            where: {
+                id: holdingId
+            }
+        })
+
+        if (!holding) {
+            return reply.status(500).send('Error deleting holding')
+        }
+
+        return reply.status(200).send({
+            message: 'Holding deleted successfully'
+        })
+    }
 }
