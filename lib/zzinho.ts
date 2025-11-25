@@ -331,6 +331,56 @@ const getMonthlyPlanning = ai.defineTool(
   }
 );
 
+const getHoldings = ai.defineTool(
+  {
+    name: "getHoldings",
+    description: "Obtém holdings (investimentos) do usuário e suas movimentações",
+    inputSchema: z.object({
+      userId: z.number().describe("ID do usuário"),
+    }),
+    outputSchema: z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+      currentValue: z.number().nullable(),
+      percentChange: z.number().nullable(),
+      movements: z.array(z.object({
+        id: z.string(),
+        type: z.string(),
+        value: z.number(),
+        date: z.string(),
+      })).nullable(),
+    })),
+  },
+  async ({ userId }) => {
+    const account = await prisma.account.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!account) {
+      throw new Error("Conta não encontrada");
+    }
+
+    const holdings = await prisma.holding.findMany({
+      where: { accountId: account.id },
+      include: { movimentations: true },
+    });
+
+    return holdings.map(h => ({
+      id: h.id,
+      name: h.name,
+      currentValue: h.total ? Number(h.total) : null,
+      percentChange: typeof (h.tax) !== 'undefined' && h.tax !== null ? Number(h.tax) : null,
+      movements: (h.movimentations?.map(m => ({
+        id: m.id,
+        type: m.type,
+        value: Number(m.value ?? (Number(m.value))),
+        date: m.createdAt.toISOString(),
+      }))) || null,
+    }));
+  }
+);
+
 // ========================================
 // FERRAMENTAS DE BUSCA
 // ========================================
@@ -693,6 +743,7 @@ Seu objetivo é empoderar os usuários com insights acionáveis baseados em dado
 - **getObjectives**: Verifica progresso em objetivos financeiros
 - **getCreditCards**: Analisa cartões de crédito e utilização
 - **getMonthlyPlanning**: Verifica planejamento mensal e categorias
+- **getHoldings**: Obtém holdings (investimentos) e movimentações
 
 ### BUSCA POR NOME:
 - **getCategoryByName**: Busca categorias (ex: "delivery", "alimentação")
@@ -708,7 +759,7 @@ Seu objetivo é empoderar os usuários com insights acionáveis baseados em dado
 Sempre siga esta sequência:
 1. **COLETA**: Use getAccountBalance + getRecentTransactions para contexto atual
 2. **ANÁLISE**: Identifique padrões, tendências e anomalias nos dados
-3. **INSIGHTS**: Relacione os achados com objetivos e planejamento do usuário
+3. **INSIGHTS**: Relacione os achados com objetivos e planejamento do usuário, sugira investimentos ou ajustes
 4. **RECOMENDAÇÕES**: Ofereça ações específicas e mensuráveis
 5. **ACOMPANHAMENTO**: Sugira métricas para monitorar progresso
 
@@ -860,6 +911,7 @@ export const genkitEndpoint = async (userId: number, prompt: string, history: Ch
       getCategoryByName,
       getCreditCardByName,
       getObjectiveByName,
+      getHoldings,
       createTransactionByName,
     ],
   });
