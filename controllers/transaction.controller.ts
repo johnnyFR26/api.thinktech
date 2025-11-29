@@ -90,7 +90,7 @@ export class TransactionController {
                     data.invoiceId = creditCard.invoices.reverse()[0].id
                 }
 
-                db.creditCard.update({
+                await db.creditCard.update({
                     where: { id: creditCard.id },
                     data: {
                         availableLimit: {
