@@ -19,7 +19,6 @@ const controller = new UserController()
 export default async function UserRoutes(server: FastifyInstance){
     server.post('/users', controller.create )
     server.delete('/users/:email', controller.deletebyEmail)
-    server.get('/users',{preHandler: [rateLimit]}, controller.getAll)
     server.put('/users/:email', controller.update)
     server.get('/users/:email', controller.getOne)
 }
