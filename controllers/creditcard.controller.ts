@@ -18,8 +18,8 @@ const updateCreditCardSchema = z.object({
     availableLimit: z.number().optional(),
     limit: z.number().optional(),
     company: z.string().optional(),
-    expire: z.string().transform((str) => new Date(str)).optional(),
-    close: z.string().transform((str) => new Date(str)).optional(),
+    expire: z.number().optional(),
+    close: z.number().optional(),
     controls: z.any().optional()
 })
 
