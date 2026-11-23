@@ -8,6 +8,8 @@ import CategoryRoutes from './category.routes';
 import CreditCardRoutes from './creditcard.routes';
 import InvoiceRoutes from './invoice.routes';
 import PlanningRoutes from './planning.routes';
+import PlanningIncomeRoutes from './planning-income.routes';
+import PlanningExpenseRoutes from './planning-expense.routes';
 import IaAgentRoutes from './ai-agent.routes';
 import FileRoutes from './file.routes';
 import HoldingRoutes from './holding.routes';
@@ -29,6 +31,8 @@ export const registerRoutes = async (server: FastifyInstance) => {
   await server.register(InvoiceRoutes)
   await server.register(CreditCardRoutes)
   await server.register(PlanningRoutes)
+  await server.register(PlanningIncomeRoutes)
+  await server.register(PlanningExpenseRoutes)
   await server.register(IaAgentRoutes)
   await server.register(FileRoutes)
   await server.register(HoldingRoutes)
