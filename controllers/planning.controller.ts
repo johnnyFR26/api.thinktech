@@ -2,7 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify"
 import { Planning } from "@prisma/client"
 import { db } from "../lib/db"
 import { z } from "zod"
-import { startOfMonth, endOfMonth } from "date-fns"
+import { startOfMonth, endOfMonth, addMonths, format } from "date-fns"
 
 const createPlanningSchema = z.object({
     availableLimit: z.number().positive(),
@@ -13,6 +13,18 @@ const createPlanningSchema = z.object({
     categories: z.array(z.object({
         categoryId: z.string().uuid(),
         limit: z.number().positive()
+    })).optional(),
+    incomes: z.array(z.object({
+        name: z.string().min(1),
+        value: z.number().positive()
+    })).optional(),
+    expenses: z.array(z.object({
+        name: z.string().min(1),
+        totalValue: z.number().positive(),
+        installments: z.number().int().min(1),
+        currentInstallment: z.number().int().min(1),
+        startDate: z.string().datetime(),
+        type: z.enum(['fixed', 'installment', 'variable'])
     })).optional()
 })
 
@@ -32,7 +44,7 @@ export class PlanningController {
     /**
      * Creates a new planning with categories
      */
-    async create(request: FastifyRequest<{Body: Planning & { categories?: Array<{categoryId: string, limit: number}> }}>, reply: FastifyReply) {
+    async create(request: FastifyRequest<{Body: Planning & { categories?: Array<{categoryId: string, limit: number}>, incomes?: Array<{name: string, value: number}>, expenses?: Array<{name: string, totalValue: number, installments: number, currentInstallment: number, startDate: string, type: string}> }}>, reply: FastifyReply) {
         const validation = createPlanningSchema.safeParse(request.body)
         if (!validation.success) {
             return reply.status(400).send({
@@ -103,13 +115,16 @@ export class PlanningController {
                         include: {
                             category: true
                         }
-                    }
+                    },
+                    incomes: true,
+                    expenses: true
                 }
             })
 
             // Cria as categorias do planejamento se fornecidas
+            let planningCategories = planning.planningCategories
             if (data.categories && data.categories.length > 0) {
-                const planningCategories = await Promise.all(
+                planningCategories = await Promise.all(
                     data.categories.map(cat => 
                         db.planningCategories.create({
                             data: {
@@ -124,14 +139,54 @@ export class PlanningController {
                         })
                     )
                 )
-
-                return reply.status(201).send({
-                    ...planning,
-                    planningCategories
-                })
             }
 
-            return reply.status(201).send(planning)
+            // Cria as receitas do planejamento se fornecidas
+            let incomes = planning.incomes
+            if (data.incomes && data.incomes.length > 0) {
+                incomes = await Promise.all(
+                    data.incomes.map(income =>
+                        db.planningIncome.create({
+                            data: {
+                                name: income.name,
+                                value: income.value,
+                                planningId: planning.id
+                            }
+                        })
+                    )
+                )
+            }
+
+            // Cria as despesas do planejamento se fornecidas
+            let expenses = planning.expenses
+            if (data.expenses && data.expenses.length > 0) {
+                expenses = await Promise.all(
+                    data.expenses.map(expense => {
+                        const monthlyValue = expense.type === 'installment'
+                            ? expense.totalValue / expense.installments
+                            : expense.totalValue
+                        return db.planningExpense.create({
+                            data: {
+                                name: expense.name,
+                                totalValue: expense.totalValue,
+                                installments: expense.installments,
+                                currentInstallment: expense.currentInstallment,
+                                monthlyValue,
+                                startDate: new Date(expense.startDate),
+                                type: expense.type,
+                                planningId: planning.id
+                            }
+                        })
+                    })
+                )
+            }
+
+            return reply.status(201).send({
+                ...planning,
+                planningCategories,
+                incomes,
+                expenses
+            })
 
         } catch (error) {
             console.error('Erro ao criar planejamento:', error)
@@ -166,7 +221,9 @@ export class PlanningController {
                             include: {
                                 category: true
                             }
-                        }
+                        },
+                        incomes: true,
+                        expenses: true
                     }
                 }),
                 db.planning.count()
@@ -225,7 +282,9 @@ export class PlanningController {
                             include: {
                                 category: true
                             }
-                        }
+                        },
+                        incomes: true,
+                        expenses: true
                     }
                 }),
                 db.planning.count({ where })
@@ -279,7 +338,9 @@ export class PlanningController {
                         include: {
                             category: true
                         }
-                    }
+                    },
+                    incomes: true,
+                    expenses: true
                 }
             })
 
@@ -329,7 +390,9 @@ export class PlanningController {
                         include: {
                             category: true
                         }
-                    }
+                    },
+                    incomes: true,
+                    expenses: true
                 }
             })
 
@@ -490,6 +553,202 @@ export class PlanningController {
             })
         } catch (error) {
             console.error('Erro ao buscar progresso do planejamento:', error)
+            return reply.status(500).send({ error: "Erro interno do servidor" })
+        }
+    }
+
+    /**
+     * Duplicate planning to next month
+     */
+    async duplicate(request: FastifyRequest<{Params: {id: string}}>, reply: FastifyReply) {
+        const { id } = request.params
+
+        try {
+            const planning = await db.planning.findUnique({
+                where: { id },
+                include: {
+                    incomes: true,
+                    expenses: true,
+                    planningCategories: true
+                }
+            })
+
+            if (!planning) {
+                return reply.status(404).send({ error: "Planejamento não encontrado" })
+            }
+
+            const nextMonth = addMonths(new Date(planning.month), 1)
+            const monthStart = startOfMonth(nextMonth)
+            const monthEnd = endOfMonth(nextMonth)
+
+            const existing = await db.planning.findFirst({
+                where: {
+                    accountId: planning.accountId,
+                    month: {
+                        gte: monthStart,
+                        lte: monthEnd
+                    }
+                }
+            })
+
+            if (existing) {
+                return reply.status(409).send({ error: 'Já existe um planejamento para o próximo mês' })
+            }
+
+            const result = await db.$transaction(async (tx) => {
+                const newPlanning = await tx.planning.create({
+                    data: {
+                        title: planning.title + ' (cópia)',
+                        limit: planning.limit,
+                        availableLimit: planning.limit,
+                        month: nextMonth,
+                        accountId: planning.accountId
+                    }
+                })
+
+                // Copy incomes
+                for (const income of planning.incomes) {
+                    await tx.planningIncome.create({
+                        data: {
+                            name: income.name,
+                            value: income.value,
+                            planningId: newPlanning.id
+                        }
+                    })
+                }
+
+                // Copy expenses
+                for (const expense of planning.expenses) {
+                    if (expense.type === 'installment') {
+                        const nextInstallment = expense.currentInstallment + 1
+                        if (nextInstallment > expense.installments) {
+                            continue
+                        }
+                        await tx.planningExpense.create({
+                            data: {
+                                name: expense.name,
+                                totalValue: expense.totalValue,
+                                installments: expense.installments,
+                                currentInstallment: nextInstallment,
+                                monthlyValue: expense.monthlyValue,
+                                startDate: expense.startDate,
+                                type: expense.type,
+                                planningId: newPlanning.id
+                            }
+                        })
+                    } else {
+                        await tx.planningExpense.create({
+                            data: {
+                                name: expense.name,
+                                totalValue: expense.totalValue,
+                                installments: expense.installments,
+                                currentInstallment: expense.currentInstallment,
+                                monthlyValue: expense.monthlyValue,
+                                startDate: expense.startDate,
+                                type: expense.type,
+                                planningId: newPlanning.id
+                            }
+                        })
+                    }
+                }
+
+                // Copy planningCategories with availableLimit reset to limit
+                for (const pc of planning.planningCategories) {
+                    await tx.planningCategories.create({
+                        data: {
+                            availableLimit: pc.limit,
+                            limit: pc.limit,
+                            categoryId: pc.categoryId,
+                            planningId: newPlanning.id
+                        }
+                    })
+                }
+
+                return tx.planning.findUnique({
+                    where: { id: newPlanning.id },
+                    include: {
+                        incomes: true,
+                        expenses: true,
+                        planningCategories: {
+                            include: { category: true }
+                        }
+                    }
+                })
+            })
+
+            return reply.status(201).send(result)
+        } catch (error) {
+            console.error('Erro ao duplicar planejamento:', error)
+            return reply.status(500).send({ error: "Erro interno do servidor" })
+        }
+    }
+
+    /**
+     * Get 12-month projection from a planning
+     */
+    async getProjection(request: FastifyRequest<{Params: {id: string}}>, reply: FastifyReply) {
+        const { id } = request.params
+
+        try {
+            const planning = await db.planning.findUnique({
+                where: { id },
+                include: {
+                    incomes: true,
+                    expenses: true
+                }
+            })
+
+            if (!planning) {
+                return reply.status(404).send({ error: "Planejamento não encontrado" })
+            }
+
+            const totalIncome = planning.incomes.reduce(
+                (sum, income) => sum + Number(income.value), 0
+            )
+
+            const projections = []
+
+            for (let offset = 0; offset < 12; offset++) {
+                const monthDate = addMonths(new Date(planning.month), offset)
+
+                let totalExpenses = 0
+                let activeExpenseCount = 0
+                const completedInstallments: string[] = []
+
+                for (const expense of planning.expenses) {
+                    if (expense.type === 'installment') {
+                        const projectedInstallment = expense.currentInstallment + offset
+                        if (projectedInstallment <= expense.installments) {
+                            totalExpenses += Number(expense.monthlyValue)
+                            activeExpenseCount++
+                            if (projectedInstallment === expense.installments) {
+                                completedInstallments.push(expense.name)
+                            }
+                        }
+                    } else {
+                        totalExpenses += Number(expense.monthlyValue)
+                        activeExpenseCount++
+                    }
+                }
+
+                projections.push({
+                    month: monthDate.toISOString(),
+                    monthLabel: format(monthDate, 'MMM yyyy'),
+                    totalIncome,
+                    totalExpenses,
+                    balance: totalIncome - totalExpenses,
+                    activeExpenses: activeExpenseCount,
+                    completedInstallments
+                })
+            }
+
+            return reply.status(200).send({
+                planningId: planning.id,
+                planningTitle: planning.title,
+                projections
+            })
+        } catch (error) {
+            console.error('Erro ao gerar projeção:', error)
             return reply.status(500).send({ error: "Erro interno do servidor" })
         }
     }

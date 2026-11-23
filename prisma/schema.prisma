@@ -156,6 +156,8 @@ model Planning {
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   planningCategories PlanningCategories[]
+  incomes            PlanningIncome[]
+  expenses           PlanningExpense[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -181,6 +183,39 @@ model PlanningCategories {
   @@unique([categoryId, planningId])
   @@index([planningId])
   @@index([categoryId])
+}
+
+model PlanningIncome {
+  id         String   @id @default(uuid())
+  name       String   @db.VarChar(255)
+  value      Decimal  @db.Decimal(19, 2)
+
+  planningId String
+  planning   Planning @relation(fields: [planningId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([planningId])
+}
+
+model PlanningExpense {
+  id                 String      @id @default(uuid())
+  name               String      @db.VarChar(255)
+  totalValue         Decimal     @db.Decimal(19, 2)
+  installments       Int
+  currentInstallment Int
+  monthlyValue       Decimal     @db.Decimal(19, 2)
+  startDate          DateTime
+  type               ExpenseType
+
+  planningId String
+  planning   Planning @relation(fields: [planningId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([planningId])
 }
 
 model Invoice {
@@ -277,4 +312,10 @@ enum TransactionType {
 enum Currency {
   BRL
   USD
+}
+
+enum ExpenseType {
+  fixed
+  installment
+  variable
 }
